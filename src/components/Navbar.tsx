@@ -1,12 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   
   // Check if page is scrolled
   useEffect(() => {
@@ -21,6 +32,11 @@ const Navbar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -50,12 +66,41 @@ const Navbar: React.FC = () => {
             <Link to="/about" className="text-gray-700 hover:text-synergi-500 transition-colors duration-300">
               About
             </Link>
-            <Button asChild variant="outline" className="border-synergi-300 text-synergi-700 hover:bg-synergi-50">
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button asChild className="bg-synergi-400 hover:bg-synergi-500 text-white">
-              <Link to="/register">Register</Link>
-            </Button>
+            
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="border-synergi-300 text-synergi-700 hover:bg-synergi-50">
+                    <User className="mr-2 h-4 w-4" />
+                    {user?.name?.split(' ')[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Link to="/profile" className="flex w-full">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link to="/appointments" className="flex w-full">Appointments</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button asChild variant="outline" className="border-synergi-300 text-synergi-700 hover:bg-synergi-50">
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button asChild className="bg-synergi-400 hover:bg-synergi-500 text-white">
+                  <Link to="/register">Register</Link>
+                </Button>
+              </>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
@@ -101,13 +146,37 @@ const Navbar: React.FC = () => {
               >
                 About
               </Link>
+              
               <div className="flex space-x-4 pt-2">
-                <Button asChild variant="outline" className="w-full border-synergi-300 text-synergi-700">
-                  <Link to="/login" onClick={() => setIsOpen(false)}>Login</Link>
-                </Button>
-                <Button asChild className="w-full bg-synergi-400 hover:bg-synergi-500 text-white">
-                  <Link to="/register" onClick={() => setIsOpen(false)}>Register</Link>
-                </Button>
+                {isAuthenticated ? (
+                  <>
+                    <Link 
+                      to="/profile" 
+                      className="text-gray-700 hover:text-synergi-500 transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild variant="outline" className="w-full border-synergi-300 text-synergi-700">
+                      <Link to="/login" onClick={() => setIsOpen(false)}>Login</Link>
+                    </Button>
+                    <Button asChild className="w-full bg-synergi-400 hover:bg-synergi-500 text-white">
+                      <Link to="/register" onClick={() => setIsOpen(false)}>Register</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
