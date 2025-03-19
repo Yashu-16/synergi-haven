@@ -11,7 +11,12 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  LineChart,
+  Line,
+  Legend,
+  AreaChart,
+  Area
 } from 'recharts';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -27,7 +32,11 @@ import {
   HandHeart,
   Smile,
   Brain,
-  Stethoscope
+  Stethoscope,
+  MessageCircle,
+  BarChart as BarChartIcon,
+  Shield,
+  MapPin
 } from 'lucide-react';
 
 const mentalHealthStats = [
@@ -43,8 +52,39 @@ const accessibilityData = [
   { name: 'Rural Access', value: 27 }
 ];
 
+// New data for growth chart
+const growthData = [
+  { year: '2020', patients: 500, doctors: 15 },
+  { year: '2021', patients: 1200, doctors: 28 },
+  { year: '2022', patients: 3000, doctors: 45 },
+  { year: '2023', patients: 5500, doctors: 68 },
+  { year: '2024', patients: 8200, doctors: 92 }
+];
+
+// New data for satisfaction chart
+const satisfactionData = [
+  { month: 'Jan', rating: 4.5 },
+  { month: 'Feb', rating: 4.6 },
+  { month: 'Mar', rating: 4.7 },
+  { month: 'Apr', rating: 4.8 },
+  { month: 'May', rating: 4.9 },
+  { month: 'Jun', rating: 4.8 },
+  { month: 'Jul', rating: 4.9 },
+  { month: 'Aug', rating: 4.9 }
+];
+
+// Consultation types data
+const consultationTypes = [
+  { name: 'Depression', value: 35 },
+  { name: 'Anxiety', value: 30 },
+  { name: 'Stress', value: 15 },
+  { name: 'Relationships', value: 10 },
+  { name: 'Others', value: 10 }
+];
+
 const COLORS = ['#ff7e67', '#ff9a76', '#ffc29e', '#ffdbcc', '#ffeee5'];
 const ACCESS_COLORS = ['#ff7e67', '#eef2f7'];
+const CONSULTATION_COLORS = ['#ff7e67', '#6E59A5', '#85d8ce', '#72b5e8', '#ffc29e'];
 
 const About = () => {
   return (
@@ -73,8 +113,49 @@ const About = () => {
           </div>
         </section>
         
-        {/* Mission & Vision */}
+        {/* Our Story - New Section */}
         <section className="py-16 bg-white">
+          <div className="container mx-auto px-6">
+            <h2 className="text-3xl font-bold mb-6 text-center">Our Story</h2>
+            <div className="max-w-4xl mx-auto">
+              <p className="text-lg text-gray-700 mb-6">
+                SynergiHub was founded in 2020 by a team of mental health professionals and technologists who recognized a critical gap in India's healthcare system: access to quality mental healthcare.
+              </p>
+              <p className="text-lg text-gray-700 mb-6">
+                In a country where over 150 million people need mental health support but less than 30% have access to it, we saw an opportunity to leverage technology to bridge this gap. Our founders, coming from both clinical psychology and digital innovation backgrounds, believed that virtual consultation could democratize access to mental healthcare across India's diverse geography.
+              </p>
+              <p className="text-lg text-gray-700 mb-6">
+                We started with a small team of 15 doctors serving around 500 patients in our first year. Today, we've grown to a network of over 90 mental health specialists serving thousands of patients across India, from metropolitan cities to remote villages.
+              </p>
+              
+              <div className="mt-12">
+                <h3 className="text-xl font-semibold mb-6 text-center">Our Growth Journey</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={growthData}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="year" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Area type="monotone" dataKey="patients" stroke="#ff7e67" fill="#ff7e67" name="Patients" />
+                      <Area type="monotone" dataKey="doctors" stroke="#6E59A5" fill="#6E59A5" name="Doctors" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-sm text-gray-500 text-center mt-4">
+                  Growth in number of patients served and specialists on our platform
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Mission & Vision */}
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
@@ -136,7 +217,7 @@ const About = () => {
         </section>
         
         {/* Our Approach */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-white">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold mb-12 text-center">Our Approach to Mental Healthcare</h2>
             
@@ -229,8 +310,157 @@ const About = () => {
           </div>
         </section>
         
-        {/* Why SynergiHub */}
+        {/* Free First Consultation - New Highlighted Section */}
+        <section className="py-16 bg-synergi-50">
+          <div className="container mx-auto px-6">
+            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-md p-8 border border-synergi-100">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="bg-synergi-100 p-5 rounded-full">
+                  <MessageCircle className="h-12 w-12 text-synergi-600" />
+                </div>
+                
+                <div>
+                  <h2 className="text-3xl font-bold mb-4">Free First Consultation</h2>
+                  <p className="text-xl text-gray-700 mb-6">
+                    We believe that building trust is the foundation of effective mental healthcare.
+                  </p>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-start">
+                      <div className="bg-green-100 p-2 rounded-full mr-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      </div>
+                      <p className="text-gray-700">
+                        <span className="font-semibold">Completely free first session</span> with no hidden charges or obligations
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-green-100 p-2 rounded-full mr-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      </div>
+                      <p className="text-gray-700">
+                        <span className="font-semibold">No time limit</span> - take all the time you need to get comfortable and explain your concerns fully
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-green-100 p-2 rounded-full mr-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      </div>
+                      <p className="text-gray-700">
+                        <span className="font-semibold">Get to know your doctor</span> before committing to a treatment plan
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-green-100 p-2 rounded-full mr-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      </div>
+                      <p className="text-gray-700">
+                        <span className="font-semibold">Thorough understanding</span> of your concerns by the doctor before beginning treatment
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Button asChild className="bg-synergi-500 hover:bg-synergi-600 text-white px-6">
+                    <Link to="/doctors">Book Your Free Consultation</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Our Impact - New Section */}
         <section className="py-16 bg-white">
+          <div className="container mx-auto px-6">
+            <h2 className="text-3xl font-bold mb-12 text-center">Our Impact</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div>
+                <h3 className="text-2xl font-semibold mb-6">Types of Consultations</h3>
+                <p className="text-gray-700 mb-8">
+                  Our platform has helped thousands of individuals across India address various mental health concerns. Here's a breakdown of the most common issues our specialists help with:
+                </p>
+                
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={consultationTypes}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {consultationTypes.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CONSULTATION_COLORS[index % CONSULTATION_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-2xl font-semibold mb-6">Patient Satisfaction</h3>
+                <p className="text-gray-700 mb-8">
+                  We continuously measure and improve our service quality. Our average patient satisfaction rating has consistently remained above 4.5/5 throughout our journey.
+                </p>
+                
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={satisfactionData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis domain={[4, 5]} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="rating" stroke="#ff7e67" activeDot={{ r: 8 }} name="Satisfaction (out of 5)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 text-center">
+                <div className="bg-synergi-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-synergi-600" />
+                </div>
+                <h3 className="text-4xl font-bold mb-2 text-synergi-600">8,200+</h3>
+                <p className="text-lg text-gray-700">Patients Served</p>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 text-center">
+                <div className="bg-synergi-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Stethoscope className="h-8 w-8 text-synergi-600" />
+                </div>
+                <h3 className="text-4xl font-bold mb-2 text-synergi-600">90+</h3>
+                <p className="text-lg text-gray-700">Mental Health Specialists</p>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 text-center">
+                <div className="bg-synergi-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="h-8 w-8 text-synergi-600" />
+                </div>
+                <h3 className="text-4xl font-bold mb-2 text-synergi-600">450+</h3>
+                <p className="text-lg text-gray-700">Cities & Towns Reached</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Why SynergiHub */}
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold mb-4 text-center">Why Choose SynergiHub?</h2>
             <p className="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">
@@ -293,7 +523,7 @@ const About = () => {
         </section>
         
         {/* For Whom We Exist */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-white">
           <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold mb-6 text-center">Who We Serve</h2>
             <p className="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">
@@ -401,3 +631,4 @@ const About = () => {
 };
 
 export default About;
+
