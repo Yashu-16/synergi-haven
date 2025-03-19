@@ -1,100 +1,54 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import DoctorCard, { DoctorProps } from '../components/DoctorCard';
+import DoctorCard from '../components/DoctorCard';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, Filter, ArrowDownAZ, Star } from 'lucide-react';
-
-const doctorsData: DoctorProps[] = [
-  {
-    id: "1",
-    name: "Dr. Ananya Sharma",
-    specialty: "Psychiatrist",
-    experience: 12,
-    rating: 4.9,
-    reviews: 124,
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-    availability: "Online & In-person",
-    specializations: ["Depression", "Anxiety", "PTSD", "OCD"],
-    nextAvailable: "Today, 4:00 PM"
-  },
-  {
-    id: "2",
-    name: "Dr. Vikram Patel",
-    specialty: "Clinical Psychologist",
-    experience: 8,
-    rating: 4.7,
-    reviews: 98,
-    image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-    availability: "Online Only",
-    specializations: ["Stress Management", "Trauma", "Couples Therapy"],
-    nextAvailable: "Tomorrow, 10:00 AM"
-  },
-  {
-    id: "3",
-    name: "Dr. Priya Nair",
-    specialty: "Child Psychiatrist",
-    experience: 15,
-    rating: 4.8,
-    reviews: 156,
-    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-    availability: "Online & In-person",
-    specializations: ["ADHD", "Autism Spectrum", "Learning Disorders", "Behavioral Issues"],
-    nextAvailable: "Today, 6:30 PM"
-  },
-  {
-    id: "4",
-    name: "Dr. Arjun Singh",
-    specialty: "Addiction Specialist",
-    experience: 10,
-    rating: 4.6,
-    reviews: 87,
-    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1964&q=80",
-    availability: "In-person Only",
-    specializations: ["Substance Abuse", "Addiction Recovery", "Dual Diagnosis"],
-    nextAvailable: "Tomorrow, 2:00 PM"
-  },
-  {
-    id: "5",
-    name: "Dr. Meena Kapoor",
-    specialty: "Psychotherapist",
-    experience: 7,
-    rating: 4.8,
-    reviews: 72,
-    image: "https://images.unsplash.com/photo-1614608682850-e0d6ed316d28?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2076&q=80",
-    availability: "Online Only",
-    specializations: ["Depression", "Anxiety", "Work-Life Balance", "Self-esteem"],
-    nextAvailable: "Today, 8:00 PM"
-  },
-  {
-    id: "6",
-    name: "Dr. Rajesh Kumar",
-    specialty: "Geriatric Psychiatrist",
-    experience: 20,
-    rating: 4.9,
-    reviews: 214,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-    availability: "Online & In-person",
-    specializations: ["Dementia", "Alzheimer's", "Late-life Depression", "Elder Care"],
-    nextAvailable: "Tomorrow, 11:30 AM"
-  }
-];
+import { Search, Filter, ArrowDownAZ, Star, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { doctorsData } from "@/utils/data";
 
 const Doctors: React.FC = () => {
+  const location = useLocation();
+  const fromAssessment = location.state?.fromAssessment || false;
+  const concernsFromAssessment = location.state?.concerns || [];
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [minExperience, setMinExperience] = useState(0);
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("rating");
+  const [showAssessmentAlert, setShowAssessmentAlert] = useState(fromAssessment);
   
   const specialties = ["Psychiatrist", "Clinical Psychologist", "Child Psychiatrist", "Addiction Specialist", "Psychotherapist", "Geriatric Psychiatrist"];
   const availabilityOptions = ["Online Only", "In-person Only", "Online & In-person"];
+  
+  // If coming from assessment, pre-filter based on concerns
+  useEffect(() => {
+    if (fromAssessment && concernsFromAssessment.length > 0) {
+      // Map concerns to specializations
+      const concernToSpecialtyMap: Record<string, string[]> = {
+        "Depression": ["Psychiatrist", "Psychotherapist"],
+        "Anxiety": ["Psychiatrist", "Psychotherapist", "Clinical Psychologist"],
+        "Physical Symptoms": ["Psychiatrist", "Clinical Psychologist"],
+        "Suicidal Thoughts": ["Psychiatrist"]
+      };
+      
+      // Get relevant specialties based on concerns
+      const relevantSpecialties = concernsFromAssessment.flatMap(concern => 
+        concernToSpecialtyMap[concern as keyof typeof concernToSpecialtyMap] || []
+      );
+      
+      // Remove duplicates and set as selected specialties
+      setSelectedSpecialties([...new Set(relevantSpecialties)]);
+    }
+  }, [fromAssessment, concernsFromAssessment]);
   
   const toggleSpecialty = (specialty: string) => {
     setSelectedSpecialties(prev => 
@@ -133,6 +87,9 @@ const Doctors: React.FC = () => {
       }
       return 0;
     });
+    
+  // Check if all doctors offer free first consultation
+  const allFirstConsultFree = filteredDoctors.every(doctor => doctor.firstConsultFree);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -145,6 +102,26 @@ const Doctors: React.FC = () => {
             <p className="text-lg text-gray-600 max-w-3xl mb-8">
               Browse through our network of qualified mental health professionals specializing in various areas of mental healthcare.
             </p>
+            
+            {showAssessmentAlert && (
+              <Alert className="mb-8 bg-synergi-50 border-synergi-300">
+                <AlertCircle className="h-4 w-4 text-synergi-500" />
+                <AlertTitle className="text-synergi-700">Based on your assessment</AlertTitle>
+                <AlertDescription className="text-synergi-600">
+                  We've filtered specialists who can address your specific needs: {concernsFromAssessment.join(', ')}.
+                  <Button 
+                    variant="link" 
+                    onClick={() => {
+                      setSelectedSpecialties([]);
+                      setShowAssessmentAlert(false);
+                    }} 
+                    className="p-0 h-auto text-synergi-700 font-medium"
+                  >
+                    Clear filters
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="relative flex flex-col md:flex-row items-start gap-4">
               <div className="relative w-full md:w-2/3">
@@ -304,6 +281,18 @@ const Doctors: React.FC = () => {
               )}
             </div>
             
+            {allFirstConsultFree && filteredDoctors.length > 0 && (
+              <div className="mb-8 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
+                <Star className="text-green-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" />
+                <div>
+                  <h3 className="font-medium text-green-800">First Consultation Free</h3>
+                  <p className="text-green-700 text-sm">
+                    All our specialists offer a free first consultation with no time limit, ensuring you get comfortable with your doctor and they understand your needs thoroughly.
+                  </p>
+                </div>
+              </div>
+            )}
+            
             {filteredDoctors.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredDoctors.map((doctor) => (
@@ -323,6 +312,7 @@ const Doctors: React.FC = () => {
                     setMinExperience(0);
                     setSelectedSpecialties([]);
                     setSelectedAvailability([]);
+                    setShowAssessmentAlert(false);
                   }}
                 >
                   Reset All Filters

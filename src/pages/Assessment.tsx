@@ -1,13 +1,17 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, ArrowRight, CheckCircle, AlertTriangle, Clock, Send } from 'lucide-react';
+import { doctorsData } from "@/utils/data";
 
 // Assessment questions
 const questions = [
@@ -173,11 +177,48 @@ const evaluateResults = (answers: Record<number, number>) => {
   };
 };
 
+// Get relevant doctors based on assessment results
+const getRelevantDoctors = (results: any) => {
+  if (!results || !results.primaryConcerns) return [];
+  
+  return doctorsData.filter(doctor => {
+    // If there are no primary concerns, all doctors are relevant
+    if (results.primaryConcerns.length === 0) return true;
+    
+    // Match doctors based on their specializations
+    return results.primaryConcerns.some((concern: string) => {
+      // Map concerns to related specializations
+      const relatedSpecializations = {
+        "Depression": ["Depression", "Trauma", "Self-esteem"],
+        "Anxiety": ["Anxiety", "Stress Management", "Work-Life Balance"],
+        "Physical Symptoms": ["Sleep Disorders", "Stress Management"],
+        "Suicidal Thoughts": ["Depression", "Trauma", "Self-esteem"]
+      };
+      
+      // Get related specializations for this concern
+      const specializations = relatedSpecializations[concern as keyof typeof relatedSpecializations] || [];
+      
+      // Check if doctor specializes in any of these
+      return specializations.some(spec => 
+        doctor.specializations.includes(spec)
+      );
+    });
+  });
+};
+
 const Assessment: React.FC = () => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1-10: questions, 11: results
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [assessmentStartTime, setAssessmentStartTime] = useState<Date | null>(null);
   const [results, setResults] = useState<any>(null);
+  const [relevantDoctors, setRelevantDoctors] = useState<any[]>([]);
+  const [doctorSelectionOpen, setDoctorSelectionOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
+  const [reportSent, setReportSent] = useState(false);
   
   const handleStart = () => {
     setCurrentStep(1);
@@ -198,6 +239,11 @@ const Assessment: React.FC = () => {
       // Calculate results
       const evalResults = evaluateResults(answers);
       setResults(evalResults);
+      
+      // Get relevant doctors
+      const doctors = getRelevantDoctors(evalResults);
+      setRelevantDoctors(doctors);
+      
       setCurrentStep(questions.length + 1);
     }
   };
@@ -213,6 +259,44 @@ const Assessment: React.FC = () => {
     setAnswers({});
     setResults(null);
     setAssessmentStartTime(null);
+    setRelevantDoctors([]);
+    setSelectedDoctor(null);
+    setReportSent(false);
+  };
+  
+  const handleSendToDoctor = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login or register to send your assessment to a doctor",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setDoctorSelectionOpen(true);
+  };
+  
+  const handleSelectDoctor = (doctorId: string) => {
+    setSelectedDoctor(doctorId);
+  };
+  
+  const handleConfirmSend = () => {
+    // In a real app, this would be an API call to send the report
+    toast({
+      title: "Assessment Sent!",
+      description: `Your assessment has been sent to ${doctorsData.find(d => d.id === selectedDoctor)?.name}. They will review it and get back to you soon.`,
+    });
+    
+    setDoctorSelectionOpen(false);
+    setReportSent(true);
+  };
+  
+  const handleViewDoctors = () => {
+    navigate("/doctors", { state: { 
+      fromAssessment: true, 
+      concerns: results?.primaryConcerns || [] 
+    }});
   };
   
   const currentQuestion = questions[currentStep - 1];
@@ -452,8 +536,21 @@ const Assessment: React.FC = () => {
                     >
                       Take Assessment Again
                     </Button>
-                    <Button asChild className="bg-synergi-400 hover:bg-synergi-500 text-white">
-                      <Link to="/register">Create Account & Connect with Doctors</Link>
+                    
+                    <Button 
+                      className="bg-synergi-400 hover:bg-synergi-500 text-white flex items-center"
+                      onClick={handleSendToDoctor}
+                      disabled={reportSent}
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      {reportSent ? "Report Sent" : "Send to Doctor"}
+                    </Button>
+                    
+                    <Button 
+                      className="bg-synergi-500 hover:bg-synergi-600 text-white"
+                      onClick={handleViewDoctors}
+                    >
+                      View Recommended Doctors
                     </Button>
                   </div>
                 </CardContent>
@@ -469,6 +566,72 @@ const Assessment: React.FC = () => {
           )}
         </div>
       </main>
+      
+      <Dialog open={doctorSelectionOpen} onOpenChange={setDoctorSelectionOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose a Doctor</DialogTitle>
+            <DialogDescription>
+              Select a doctor to send your assessment report to. They will review your results and get in touch with you.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Doctors recommended based on your assessment:</h3>
+            </div>
+            
+            <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
+              {relevantDoctors.length > 0 ? (
+                relevantDoctors.map(doctor => (
+                  <div 
+                    key={doctor.id}
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedDoctor === doctor.id 
+                        ? 'border-synergi-400 bg-synergi-50' 
+                        : 'border-gray-200 hover:border-synergi-200 hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleSelectDoctor(doctor.id)}
+                  >
+                    <div className="flex items-center">
+                      <img src={doctor.image} alt={doctor.name} className="w-10 h-10 rounded-full object-cover mr-3" />
+                      <div>
+                        <h4 className="font-medium">{doctor.name}</h4>
+                        <p className="text-sm text-gray-500">{doctor.specialty}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  No doctors available based on your assessment.
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 text-center text-sm text-gray-500">
+              <p>Each doctor will receive a copy of your assessment results and will contact you within 24 hours.</p>
+              <p className="text-synergi-600 mt-1 font-medium">First consultation is always free.</p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setDoctorSelectionOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmSend} 
+              disabled={!selectedDoctor}
+              className="bg-synergi-500 hover:bg-synergi-600 text-white"
+            >
+              Send Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>

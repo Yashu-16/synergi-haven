@@ -16,6 +16,11 @@ export interface DoctorProps {
   availability: string;
   specializations: string[];
   nextAvailable: string;
+  bio?: string;
+  education?: string[];
+  languages?: string[];
+  consultationFee?: number;
+  firstConsultFree?: boolean;
 }
 
 const DoctorCard: React.FC<{ doctor: DoctorProps }> = ({ doctor }) => {
@@ -76,6 +81,15 @@ const DoctorCard: React.FC<{ doctor: DoctorProps }> = ({ doctor }) => {
             </Link>
           </Button>
         </div>
+        
+        {doctor.firstConsultFree && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-green-600 text-sm font-medium flex items-center">
+              <Star className="w-4 h-4 mr-1" fill="currentColor" />
+              First consultation is free
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
