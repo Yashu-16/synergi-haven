@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -52,7 +51,6 @@ const accessibilityData = [
   { name: 'Rural Access', value: 27 }
 ];
 
-// New data for growth chart
 const growthData = [
   { year: '2020', patients: 500, doctors: 15 },
   { year: '2021', patients: 1200, doctors: 28 },
@@ -61,7 +59,6 @@ const growthData = [
   { year: '2024', patients: 8200, doctors: 92 }
 ];
 
-// New data for satisfaction chart
 const satisfactionData = [
   { month: 'Jan', rating: 4.5 },
   { month: 'Feb', rating: 4.6 },
@@ -73,7 +70,6 @@ const satisfactionData = [
   { month: 'Aug', rating: 4.9 }
 ];
 
-// Consultation types data
 const consultationTypes = [
   { name: 'Depression', value: 35 },
   { name: 'Anxiety', value: 30 },
@@ -119,7 +115,7 @@ const About = () => {
             <h2 className="text-3xl font-bold mb-6 text-center">Our Story</h2>
             <div className="max-w-4xl mx-auto">
               <p className="text-lg text-gray-700 mb-6">
-                SynergiHub was founded in 2020 by a team of mental health professionals and technologists who recognized a critical gap in India's healthcare system: access to quality mental healthcare.
+                SynergiHub was founded in 2024 by a team of mental health professionals and technologists who recognized a critical gap in India's healthcare system: access to quality mental healthcare.
               </p>
               <p className="text-lg text-gray-700 mb-6">
                 In a country where over 150 million people need mental health support but less than 30% have access to it, we saw an opportunity to leverage technology to bridge this gap. Our founders, coming from both clinical psychology and digital innovation backgrounds, believed that virtual consultation could democratize access to mental healthcare across India's diverse geography.
@@ -631,4 +627,3 @@ const About = () => {
 };
 
 export default About;
-
