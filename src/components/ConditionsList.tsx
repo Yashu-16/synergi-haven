@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
@@ -113,8 +112,15 @@ const ConditionsList: React.FC = () => {
     ]
   };
 
+  const handleTabChange = () => {
+    const sectionElement = document.querySelector('section.py-20.bg-synergi-50');
+    if (sectionElement) {
+      sectionElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <section className="py-20 bg-synergi-50">
+    <section className="py-20 bg-synergi-50" id="conditions-section">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="inline-block px-3 py-1 mb-4 rounded-full bg-synergi-100 text-synergi-700 text-sm font-medium">
@@ -126,7 +132,7 @@ const ConditionsList: React.FC = () => {
           </p>
         </div>
         
-        <Tabs defaultValue="common" className="w-full">
+        <Tabs defaultValue="common" className="w-full" onValueChange={handleTabChange}>
           <div className="flex justify-center mb-8">
             <TabsList className="bg-synergi-100/50">
               <TabsTrigger value="common" className="data-[state=active]:bg-white data-[state=active]:text-synergi-700">Common Concerns</TabsTrigger>
@@ -190,7 +196,11 @@ const ConditionsList: React.FC = () => {
         </Tabs>
         
         <div className="text-center mt-12">
-          <Button asChild className="bg-synergi-400 hover:bg-synergi-500 text-white px-8 py-6 text-lg">
+          <Button 
+            asChild 
+            className="bg-synergi-400 hover:bg-synergi-500 text-white px-8 py-6 text-lg"
+            onClick={() => window.scrollTo(0, 0)}
+          >
             <Link to="/assessment">Take a Mental Health Assessment</Link>
           </Button>
         </div>
