@@ -34,8 +34,8 @@ const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Please confirm your password'),
   role: z.enum(['patient', 'doctor']),
-  agreeTerms: z.literal(true, {
-    errorMap: () => ({ message: 'You must agree to the terms and conditions' }),
+  agreeTerms: z.boolean().refine(val => val === true, {
+    message: 'You must agree to the terms and conditions',
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",

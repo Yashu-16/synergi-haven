@@ -13,11 +13,19 @@ import { Search, Filter, ArrowDownAZ, Star, AlertCircle, Check } from 'lucide-re
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { doctorsData } from "@/utils/data";
 
+interface LocationState {
+  fromAssessment?: boolean;
+  concerns?: string[];
+  assessmentCompleted?: boolean;
+}
+
 const Doctors: React.FC = () => {
   const location = useLocation();
-  const fromAssessment = location.state?.fromAssessment || false;
-  const concernsFromAssessment = location.state?.concerns || [];
-  const assessmentCompleted = location.state?.assessmentCompleted || false;
+  const state = location.state as LocationState;
+  
+  const fromAssessment = state?.fromAssessment || false;
+  const concernsFromAssessment = state?.concerns || [];
+  const assessmentCompleted = state?.assessmentCompleted || false;
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
