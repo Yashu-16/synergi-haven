@@ -39,6 +39,15 @@ const DoctorCard: React.FC<{ doctor: DoctorProps }> = ({ doctor }) => {
             <span className="text-gray-500 text-xs ml-1">({doctor.reviews})</span>
           </div>
         </div>
+        
+        {doctor.firstConsultFree && (
+          <div className="absolute top-4 left-4">
+            <div className="flex items-center bg-green-500/90 text-white backdrop-blur-sm py-1 px-3 rounded-full">
+              <Star className="w-4 h-4 mr-1" fill="currentColor" />
+              <span className="font-medium text-sm">First Consult Free</span>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="p-6">
@@ -86,7 +95,7 @@ const DoctorCard: React.FC<{ doctor: DoctorProps }> = ({ doctor }) => {
           <div className="mt-4 pt-4 border-t border-gray-100">
             <p className="text-green-600 text-sm font-medium flex items-center">
               <Star className="w-4 h-4 mr-1" fill="currentColor" />
-              First consultation is free
+              First consultation is free with no time limit
             </p>
           </div>
         )}

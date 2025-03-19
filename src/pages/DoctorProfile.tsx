@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, addDays, addWeeks, isSameDay } from "date-fns";
+import { format, addDays, addWeeks, isSameDay, isToday, isFuture, parseISO } from "date-fns";
 import { doctorsData } from "@/utils/data";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Star, 
   Clock, 
@@ -25,10 +26,26 @@ import {
   GraduationCap,
   Languages,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
+// Generate unavailable dates (in a real app, this would come from an API)
+const generateUnavailableDates = (doctorId: string) => {
+  const today = new Date();
+  const unavailableDates = [];
+  
+  // Make some random dates unavailable
+  for (let i = 1; i <= 30; i++) {
+    if (Math.random() > 0.7) { // 30% chance of a date being unavailable
+      const date = addDays(today, i);
+      unavailableDates.push(date);
+    }
+  }
+  
+  return unavailableDates;
+};
 
 // Get time slots for a specific day
 const getTimeSlots = (doctorId: string, date: Date) => {
@@ -60,9 +77,27 @@ const DoctorProfile: React.FC = () => {
   const [timeSlots, setTimeSlots] = useState<{time: string, isAvailable: boolean}[]>([]);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const [consultType, setConsultType] = useState<"online" | "in-person">("online");
+  const [appointmentDetails, setAppointmentDetails] = useState<{
+    date: Date | null;
+    time: string | null;
+    type: string;
+  }>({
+    date: null,
+    time: null,
+    type: "online",
+  });
+  
+  // Update unavailable dates when doctor changes
+  useEffect(() => {
+    if (doctor) {
+      setUnavailableDates(generateUnavailableDates(doctor.id));
+    }
+  }, [doctor]);
   
   // Update time slots when date changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (date && doctor) {
       setTimeSlots(getTimeSlots(doctor.id, date));
       setSelectedTime(null);
@@ -92,15 +127,25 @@ const DoctorProfile: React.FC = () => {
       return;
     }
 
-    // In a real app, this would be an API call
+    // Open confirmation dialog instead of immediate booking
+    setAppointmentDetails({
+      date: date || null,
+      time: selectedTime,
+      type: consultType,
+    });
+    setConfirmationOpen(true);
+  };
+  
+  const handleConfirmBooking = () => {
+    // In a real app, this would be an API call to book the appointment
     toast({
       title: "Appointment Booked!",
-      description: `Your appointment with ${doctor?.name} on ${format(date!, 'PPP')} at ${selectedTime} has been confirmed.`,
+      description: `Your ${consultType} appointment with ${doctor?.name} on ${format(date!, 'PPP')} at ${selectedTime} has been confirmed. The doctor has been notified.`,
     });
     
-    // Reset selection
-    setSelectedTime(null);
+    // Close dialog and reset selection
     setConfirmationOpen(false);
+    setSelectedTime(null);
   };
 
   if (!doctor) {
@@ -120,6 +165,12 @@ const DoctorProfile: React.FC = () => {
       </div>
     );
   }
+
+  const isDayUnavailable = (day: Date) => {
+    return unavailableDates.some(unavailableDate => 
+      isSameDay(day, unavailableDate)
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -255,7 +306,11 @@ const DoctorProfile: React.FC = () => {
                 <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-4">Book an Appointment</h2>
                   
-                  <Tabs defaultValue="online" className="mb-6">
+                  <Tabs 
+                    defaultValue="online" 
+                    className="mb-6"
+                    onValueChange={(value) => setConsultType(value as "online" | "in-person")}
+                  >
                     <TabsList className="grid grid-cols-2 mb-4">
                       <TabsTrigger value="online" className="flex items-center gap-2">
                         <Video className="h-4 w-4" /> 
@@ -286,10 +341,14 @@ const DoctorProfile: React.FC = () => {
                               selected={date}
                               onSelect={handleDateSelect}
                               disabled={(currentDate) => {
-                                // Can't select dates in the past
+                                // Can't select dates in the past or unavailable dates
                                 const today = new Date();
                                 today.setHours(0, 0, 0, 0);
-                                return currentDate < today || currentDate > addWeeks(today, 4);
+                                return (
+                                  currentDate < today || 
+                                  currentDate > addWeeks(today, 4) || 
+                                  isDayUnavailable(currentDate)
+                                );
                               }}
                               initialFocus
                               className="p-3 pointer-events-auto"
@@ -381,10 +440,14 @@ const DoctorProfile: React.FC = () => {
                                   selected={date}
                                   onSelect={handleDateSelect}
                                   disabled={(currentDate) => {
-                                    // Can't select dates in the past
+                                    // Can't select dates in the past or unavailable dates
                                     const today = new Date();
                                     today.setHours(0, 0, 0, 0);
-                                    return currentDate < today || currentDate > addWeeks(today, 4);
+                                    return (
+                                      currentDate < today || 
+                                      currentDate > addWeeks(today, 4) || 
+                                      isDayUnavailable(currentDate)
+                                    );
                                   }}
                                   initialFocus
                                   className="p-3 pointer-events-auto"
@@ -451,6 +514,72 @@ const DoctorProfile: React.FC = () => {
           </div>
         </div>
       </main>
+      
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmationOpen} onOpenChange={setConfirmationOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Appointment</DialogTitle>
+            <DialogDescription>
+              Please review the appointment details before confirming.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="flex items-center">
+              <img src={doctor.image} alt={doctor.name} className="w-12 h-12 rounded-full object-cover mr-3" />
+              <div>
+                <h4 className="font-medium">{doctor.name}</h4>
+                <p className="text-sm text-gray-500">{doctor.specialty}</p>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Date:</span>
+                <span className="font-medium">{appointmentDetails.date ? format(appointmentDetails.date, 'PPP') : ''}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Time:</span>
+                <span className="font-medium">{appointmentDetails.time}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Type:</span>
+                <span className="font-medium capitalize">{appointmentDetails.type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Fee:</span>
+                <span className="font-medium">{doctor.firstConsultFree ? 'Free (First consultation)' : `₹${doctor.consultationFee}`}</span>
+              </div>
+            </div>
+            
+            {doctor.firstConsultFree && (
+              <div className="bg-green-50 border border-green-100 rounded-lg p-3 flex items-start">
+                <Check className="text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-green-800">
+                  Your first consultation is free with no time limit until we properly understand your concerns.
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setConfirmationOpen(false)}
+              className="border-gray-200"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmBooking}
+              className="bg-synergi-500 hover:bg-synergi-600 text-white"
+            >
+              Confirm Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, Filter, ArrowDownAZ, Star, AlertCircle } from 'lucide-react';
+import { Search, Filter, ArrowDownAZ, Star, AlertCircle, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { doctorsData } from "@/utils/data";
 
@@ -17,6 +17,7 @@ const Doctors: React.FC = () => {
   const location = useLocation();
   const fromAssessment = location.state?.fromAssessment || false;
   const concernsFromAssessment = location.state?.concerns || [];
+  const assessmentCompleted = location.state?.assessmentCompleted || false;
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -102,6 +103,16 @@ const Doctors: React.FC = () => {
             <p className="text-lg text-gray-600 max-w-3xl mb-8">
               Browse through our network of qualified mental health professionals specializing in various areas of mental healthcare.
             </p>
+            
+            {assessmentCompleted && (
+              <Alert className="mb-8 bg-green-50 border-green-300">
+                <Check className="h-4 w-4 text-green-500" />
+                <AlertTitle className="text-green-700">Assessment Completed</AlertTitle>
+                <AlertDescription className="text-green-600">
+                  Your assessment has been sent to a doctor who will review it and contact you soon.
+                </AlertDescription>
+              </Alert>
+            )}
             
             {showAssessmentAlert && (
               <Alert className="mb-8 bg-synergi-50 border-synergi-300">

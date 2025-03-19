@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -219,6 +218,7 @@ const Assessment: React.FC = () => {
   const [doctorSelectionOpen, setDoctorSelectionOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [reportSent, setReportSent] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   
   const handleStart = () => {
     setCurrentStep(1);
@@ -244,7 +244,20 @@ const Assessment: React.FC = () => {
       const doctors = getRelevantDoctors(evalResults);
       setRelevantDoctors(doctors);
       
+      // Update to not show results immediately, but open doctor selection instead
       setCurrentStep(questions.length + 1);
+      
+      // Automatically open doctor selection dialog if user is logged in
+      if (user) {
+        setDoctorSelectionOpen(true);
+      } else {
+        setShowResults(true);
+        toast({
+          title: "Login Required",
+          description: "Please login to send your assessment to a doctor.",
+          variant: "default",
+        });
+      }
     }
   };
   
@@ -283,20 +296,34 @@ const Assessment: React.FC = () => {
   
   const handleConfirmSend = () => {
     // In a real app, this would be an API call to send the report
+    const selectedDoctorName = doctorsData.find(d => d.id === selectedDoctor)?.name;
+    
     toast({
       title: "Assessment Sent!",
-      description: `Your assessment has been sent to ${doctorsData.find(d => d.id === selectedDoctor)?.name}. They will review it and get back to you soon.`,
+      description: `Your assessment has been sent to Dr. ${selectedDoctorName}. They will review it and get back to you soon.`,
     });
     
     setDoctorSelectionOpen(false);
     setReportSent(true);
+    
+    // Navigate to relevant doctors page
+    navigate("/doctors", { 
+      state: { 
+        fromAssessment: true, 
+        concerns: results?.primaryConcerns || [],
+        assessmentCompleted: true
+      }
+    });
   };
   
   const handleViewDoctors = () => {
-    navigate("/doctors", { state: { 
-      fromAssessment: true, 
-      concerns: results?.primaryConcerns || [] 
-    }});
+    navigate("/doctors", { 
+      state: { 
+        fromAssessment: true, 
+        concerns: results?.primaryConcerns || [],
+        assessmentCompleted: true
+      }
+    });
   };
   
   const currentQuestion = questions[currentStep - 1];
@@ -457,76 +484,90 @@ const Assessment: React.FC = () => {
             <div className="max-w-4xl mx-auto animate-fade-in-up">
               <Card>
                 <CardContent className="pt-8 pb-8">
-                  <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold mb-4">Your Assessment Results</h1>
-                    <p className="text-gray-600">
-                      Based on your responses, we've prepared the following insights about your mental health.
-                    </p>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-xl border border-gray-200 text-center">
-                      <h3 className="text-lg font-medium mb-2">Overall Score</h3>
-                      <div className="text-4xl font-bold mb-1">{results.totalScore}</div>
-                      <p className="text-sm text-gray-500">Out of 30</p>
-                    </div>
-                    
-                    <div className="bg-white p-6 rounded-xl border border-gray-200 text-center">
-                      <h3 className="text-lg font-medium mb-2">Severity Level</h3>
-                      <div className={`text-2xl font-bold mb-1 capitalize ${getSeverityColor(results.severity)}`}>
-                        {results.severity}
+                  {showResults ? (
+                    <>
+                      <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold mb-4">Your Assessment Results</h1>
+                        <p className="text-gray-600">
+                          Based on your responses, we've prepared the following insights about your mental health.
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-500">Based on your responses</p>
-                    </div>
-                    
-                    <div className="bg-white p-6 rounded-xl border border-gray-200">
-                      <h3 className="text-lg font-medium mb-2 text-center">Primary Concerns</h3>
-                      <div>
-                        {results.primaryConcerns.length > 0 ? (
-                          <ul className="space-y-1">
-                            {results.primaryConcerns.map((concern: string, index: number) => (
-                              <li key={index} className="flex items-center">
-                                <div className="w-2 h-2 bg-synergi-400 rounded-full mr-2"></div>
-                                {concern}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-gray-500 text-center">No significant concerns detected</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 text-center">
+                          <h3 className="text-lg font-medium mb-2">Overall Score</h3>
+                          <div className="text-4xl font-bold mb-1">{results.totalScore}</div>
+                          <p className="text-sm text-gray-500">Out of 30</p>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-xl border border-gray-200 text-center">
+                          <h3 className="text-lg font-medium mb-2">Severity Level</h3>
+                          <div className={`text-2xl font-bold mb-1 capitalize ${getSeverityColor(results.severity)}`}>
+                            {results.severity}
+                          </div>
+                          <p className="text-sm text-gray-500">Based on your responses</p>
+                        </div>
+                        
+                        <div className="bg-white p-6 rounded-xl border border-gray-200">
+                          <h3 className="text-lg font-medium mb-2 text-center">Primary Concerns</h3>
+                          <div>
+                            {results.primaryConcerns.length > 0 ? (
+                              <ul className="space-y-1">
+                                {results.primaryConcerns.map((concern: string, index: number) => (
+                                  <li key={index} className="flex items-center">
+                                    <div className="w-2 h-2 bg-synergi-400 rounded-full mr-2"></div>
+                                    {concern}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-gray-500 text-center">No significant concerns detected</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-synergi-50 p-6 rounded-xl mb-8">
+                        <h3 className="text-lg font-semibold mb-4">What does this mean?</h3>
+                        {results.severity === "minimal" && (
+                          <p>Your responses suggest minimal symptoms. It's still beneficial to practice self-care and monitor your mental health.</p>
+                        )}
+                        {results.severity === "mild" && (
+                          <p>Your responses suggest mild symptoms. Consider speaking with a mental health professional for guidance on coping strategies.</p>
+                        )}
+                        {results.severity === "moderate" && (
+                          <p>Your responses suggest moderate symptoms. We recommend consultation with a mental health professional to develop a treatment plan.</p>
+                        )}
+                        {results.severity === "moderately severe" && (
+                          <p>Your responses suggest moderately severe symptoms. We strongly recommend seeking professional help from a psychiatrist or psychologist.</p>
+                        )}
+                        {results.severity === "severe" && (
+                          <p>Your responses suggest severe symptoms. Please consult with a mental health professional as soon as possible for appropriate intervention.</p>
+                        )}
+                        
+                        {results.categoryScores.suicidalThoughts > 0 && (
+                          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-700 font-medium">
+                              Your responses indicate thoughts about self-harm or suicide. Please reach out for help immediately:
+                            </p>
+                            <p className="mt-2">
+                              India Mental Health Helpline: <strong>1800-599-0019</strong> (Toll Free 24/7)
+                            </p>
+                          </div>
                         )}
                       </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-10">
+                      <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                      <h2 className="text-2xl font-bold mb-2">Assessment Completed!</h2>
+                      <p className="text-gray-600 mb-8">
+                        {reportSent 
+                          ? `Your assessment has been sent to the doctor. They will review it and get back to you soon.`
+                          : `Your assessment is ready to be sent to a doctor who can help with your specific needs.`}
+                      </p>
                     </div>
-                  </div>
-                  
-                  <div className="bg-synergi-50 p-6 rounded-xl mb-8">
-                    <h3 className="text-lg font-semibold mb-4">What does this mean?</h3>
-                    {results.severity === "minimal" && (
-                      <p>Your responses suggest minimal symptoms. It's still beneficial to practice self-care and monitor your mental health.</p>
-                    )}
-                    {results.severity === "mild" && (
-                      <p>Your responses suggest mild symptoms. Consider speaking with a mental health professional for guidance on coping strategies.</p>
-                    )}
-                    {results.severity === "moderate" && (
-                      <p>Your responses suggest moderate symptoms. We recommend consultation with a mental health professional to develop a treatment plan.</p>
-                    )}
-                    {results.severity === "moderately severe" && (
-                      <p>Your responses suggest moderately severe symptoms. We strongly recommend seeking professional help from a psychiatrist or psychologist.</p>
-                    )}
-                    {results.severity === "severe" && (
-                      <p>Your responses suggest severe symptoms. Please consult with a mental health professional as soon as possible for appropriate intervention.</p>
-                    )}
-                    
-                    {results.categoryScores.suicidalThoughts > 0 && (
-                      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-red-700 font-medium">
-                          Your responses indicate thoughts about self-harm or suicide. Please reach out for help immediately:
-                        </p>
-                        <p className="mt-2">
-                          India Mental Health Helpline: <strong>1800-599-0019</strong> (Toll Free 24/7)
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  )}
                   
                   <div className="border-t pt-8 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
                     <Button 
@@ -537,14 +578,15 @@ const Assessment: React.FC = () => {
                       Take Assessment Again
                     </Button>
                     
-                    <Button 
-                      className="bg-synergi-400 hover:bg-synergi-500 text-white flex items-center"
-                      onClick={handleSendToDoctor}
-                      disabled={reportSent}
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      {reportSent ? "Report Sent" : "Send to Doctor"}
-                    </Button>
+                    {!reportSent && (
+                      <Button 
+                        className="bg-synergi-400 hover:bg-synergi-500 text-white flex items-center"
+                        onClick={handleSendToDoctor}
+                      >
+                        <Send className="mr-2 h-4 w-4" />
+                        Send to Doctor
+                      </Button>
+                    )}
                     
                     <Button 
                       className="bg-synergi-500 hover:bg-synergi-600 text-white"
