@@ -52,11 +52,11 @@ const accessibilityData = [
 ];
 
 const growthData = [
-  { year: '2020', patients: 500, doctors: 15 },
-  { year: '2021', patients: 1200, doctors: 28 },
-  { year: '2022', patients: 3000, doctors: 45 },
-  { year: '2023', patients: 5500, doctors: 68 },
-  { year: '2024', patients: 8200, doctors: 92 }
+  { year: '2024', patients: 500, doctors: 15 },
+  { year: '2025', patients: 1200, doctors: 28, projected: true },
+  { year: '2026', patients: 3000, doctors: 45, projected: true },
+  { year: '2027', patients: 5500, doctors: 68, projected: true },
+  { year: '2028', patients: 8200, doctors: 92, projected: true }
 ];
 
 const satisfactionData = [
@@ -121,11 +121,11 @@ const About = () => {
                 In a country where over 150 million people need mental health support but less than 30% have access to it, we saw an opportunity to leverage technology to bridge this gap. Our founders, coming from both clinical psychology and digital innovation backgrounds, believed that virtual consultation could democratize access to mental healthcare across India's diverse geography.
               </p>
               <p className="text-lg text-gray-700 mb-6">
-                We started with a small team of 15 doctors serving around 500 patients in our first year. Today, we've grown to a network of over 90 mental health specialists serving thousands of patients across India, from metropolitan cities to remote villages.
+                We started with a small team of 15 doctors serving around 500 patients in our first year. As we grow, we project to expand our network of mental health specialists to serve thousands of patients across India, from metropolitan cities to remote villages.
               </p>
               
               <div className="mt-12">
-                <h3 className="text-xl font-semibold mb-6 text-center">Our Growth Journey</h3>
+                <h3 className="text-xl font-semibold mb-6 text-center">Our Projected Growth Journey</h3>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -135,7 +135,19 @@ const About = () => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="year" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-white p-2 border border-gray-200 shadow-sm">
+                              <p className="font-medium">{data.year} {data.projected ? "(Projected)" : ""}</p>
+                              <p>Patients: {data.patients}</p>
+                              <p>Doctors: {data.doctors}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }} />
                       <Legend />
                       <Area type="monotone" dataKey="patients" stroke="#ff7e67" fill="#ff7e67" name="Patients" />
                       <Area type="monotone" dataKey="doctors" stroke="#6E59A5" fill="#6E59A5" name="Doctors" />
@@ -143,7 +155,7 @@ const About = () => {
                   </ResponsiveContainer>
                 </div>
                 <p className="text-sm text-gray-500 text-center mt-4">
-                  Growth in number of patients served and specialists on our platform
+                  Current and projected growth in number of patients served and specialists on our platform
                 </p>
               </div>
             </div>
@@ -627,3 +639,4 @@ const About = () => {
 };
 
 export default About;
+
