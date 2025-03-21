@@ -72,9 +72,9 @@ function Calendar({
           const isAvailable = availableDates.length > 0 ? isDateAvailable(date) : false;
           return (
             <div className="relative">
-              <div {...dayProps}>
-                {dayProps.children}
-              </div>
+              <button {...dayProps}>
+                {dayProps.day}
+              </button>
               {isAvailable && (
                 <div className="absolute inset-0 border-2 border-green-500 rounded-full pointer-events-none"></div>
               )}
