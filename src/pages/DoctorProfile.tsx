@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -428,6 +429,7 @@ const DoctorProfile: React.FC = () => {
                           <div className="grid grid-cols-1 gap-4">
                             <div>
                               <h3 className="font-medium mb-2">Select Date</h3>
+                              {/* Using the same calendar component for both tabs */}
                               <Calendar
                                 mode="single"
                                 selected={date}
