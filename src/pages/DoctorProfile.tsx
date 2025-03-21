@@ -181,7 +181,7 @@ const DoctorProfile: React.FC = () => {
     );
   };
 
-  // Modify the booking section to show the calendar beside time slots
+  // Modify the booking section to show only one calendar
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -333,40 +333,30 @@ const DoctorProfile: React.FC = () => {
                     </TabsList>
                     
                     <TabsContent value="online" className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
                           <h3 className="font-medium mb-2">Select Date</h3>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-left font-normal"
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP") : "Select a date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={handleDateSelect}
-                                availableDates={availableDates}
-                                disabled={(currentDate) => {
-                                  // Can't select dates in the past or unavailable dates
-                                  const today = new Date();
-                                  today.setHours(0, 0, 0, 0);
-                                  return (
-                                    currentDate < today || 
-                                    currentDate > addWeeks(today, 4) || 
-                                    isDayUnavailable(currentDate)
-                                  );
-                                }}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                          <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={handleDateSelect}
+                            availableDates={availableDates}
+                            disabled={(currentDate) => {
+                              // Can't select dates in the past or unavailable dates
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              return (
+                                currentDate < today || 
+                                currentDate > addWeeks(today, 4) || 
+                                isDayUnavailable(currentDate)
+                              );
+                            }}
+                            className="p-3 pointer-events-auto border border-gray-200 rounded-lg"
+                          />
+                          <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
+                            <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
+                            <span>Available dates</span>
+                          </div>
 
                           <div className="mt-4">
                             <h3 className="font-medium mb-2">Available Time Slots</h3>
@@ -389,33 +379,6 @@ const DoctorProfile: React.FC = () => {
                                 <p className="text-gray-500">No available slots for the selected date</p>
                               </div>
                             )}
-                          </div>
-                        </div>
-                        
-                        <div className="hidden md:block">
-                          <h3 className="font-medium mb-2">Calendar</h3>
-                          <div className="border border-gray-200 rounded-lg p-2 bg-white">
-                            <Calendar
-                              mode="single"
-                              selected={date}
-                              onSelect={handleDateSelect}
-                              availableDates={availableDates}
-                              disabled={(currentDate) => {
-                                // Can't select dates in the past or unavailable dates
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                return (
-                                  currentDate < today || 
-                                  currentDate > addWeeks(today, 4) || 
-                                  isDayUnavailable(currentDate)
-                                );
-                              }}
-                              className="p-1"
-                            />
-                            <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
-                              <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
-                              <span>Available dates</span>
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -462,40 +425,30 @@ const DoctorProfile: React.FC = () => {
                             </p>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 gap-4">
                             <div>
                               <h3 className="font-medium mb-2">Select Date</h3>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="w-full justify-start text-left font-normal"
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? format(date, "PPP") : "Select a date"}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={date}
-                                    onSelect={handleDateSelect}
-                                    availableDates={availableDates}
-                                    disabled={(currentDate) => {
-                                      // Can't select dates in the past or unavailable dates
-                                      const today = new Date();
-                                      today.setHours(0, 0, 0, 0);
-                                      return (
-                                        currentDate < today || 
-                                        currentDate > addWeeks(today, 4) || 
-                                        isDayUnavailable(currentDate)
-                                      );
-                                    }}
-                                    initialFocus
-                                    className="p-3 pointer-events-auto"
-                                  />
-                                </PopoverContent>
-                              </Popover>
+                              <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={handleDateSelect}
+                                availableDates={availableDates}
+                                disabled={(currentDate) => {
+                                  // Can't select dates in the past or unavailable dates
+                                  const today = new Date();
+                                  today.setHours(0, 0, 0, 0);
+                                  return (
+                                    currentDate < today || 
+                                    currentDate > addWeeks(today, 4) || 
+                                    isDayUnavailable(currentDate)
+                                  );
+                                }}
+                                className="p-3 pointer-events-auto border border-gray-200 rounded-lg"
+                              />
+                              <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
+                                <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
+                                <span>Available dates</span>
+                              </div>
 
                               <div className="mt-4">
                                 <h3 className="font-medium mb-2">Available Time Slots</h3>
@@ -518,33 +471,6 @@ const DoctorProfile: React.FC = () => {
                                     <p className="text-gray-500">No available slots for the selected date</p>
                                   </div>
                                 )}
-                              </div>
-                            </div>
-                            
-                            <div className="hidden md:block">
-                              <h3 className="font-medium mb-2">Calendar</h3>
-                              <div className="border border-gray-200 rounded-lg p-2 bg-white">
-                                <Calendar
-                                  mode="single"
-                                  selected={date}
-                                  onSelect={handleDateSelect}
-                                  availableDates={availableDates}
-                                  disabled={(currentDate) => {
-                                    // Can't select dates in the past or unavailable dates
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    return (
-                                      currentDate < today || 
-                                      currentDate > addWeeks(today, 4) || 
-                                      isDayUnavailable(currentDate)
-                                    );
-                                  }}
-                                  className="p-1"
-                                />
-                                <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
-                                  <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
-                                  <span>Available dates</span>
-                                </div>
                               </div>
                             </div>
                           </div>
