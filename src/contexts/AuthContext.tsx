@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, role: 'patient' | 'doctor') => Promise<boolean>;
   logout: () => void;
+  sendTestResults: (doctorId: string, assessmentData: any) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,9 +45,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  // Note: This is still using localStorage but is structured to be easily replaced with Supabase
+  // In a real implementation, we would replace these functions with Supabase auth calls
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // In a real app, this would be an API call
+      // In a real app with Supabase, we would use supabase.auth.signInWithPassword()
       const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
       const user = users.find((u: any) => 
         u.email.toLowerCase() === email.toLowerCase() && u.password === password
@@ -87,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role: 'patient' | 'doctor'
   ): Promise<boolean> => {
     try {
-      // In a real app, this would be an API call
+      // In a real app with Supabase, we would use supabase.auth.signUp()
       const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
       
       if (users.some((u: any) => u.email.toLowerCase() === email.toLowerCase())) {
@@ -133,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // In a real app with Supabase, we would use supabase.auth.signOut()
     setUser(null);
     localStorage.removeItem('synergiUser');
     toast({
@@ -141,13 +145,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // New function to send test results to a doctor
+  const sendTestResults = async (doctorId: string, assessmentData: any): Promise<boolean> => {
+    try {
+      // In a real app with Supabase, we would store this in a database table
+      // For now, we'll simulate it with localStorage
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to send assessment results",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      const testResults = JSON.parse(localStorage.getItem('synergiTestResults') || '[]');
+      
+      const newTestResult = {
+        id: crypto.randomUUID(),
+        patientId: user.id,
+        patientName: user.name,
+        doctorId,
+        assessmentData,
+        sentAt: new Date().toISOString(),
+        status: 'pending'
+      };
+      
+      testResults.push(newTestResult);
+      localStorage.setItem('synergiTestResults', JSON.stringify(testResults));
+      
+      toast({
+        title: "Assessment sent",
+        description: "Your assessment has been sent to the doctor successfully",
+      });
+      return true;
+    } catch (error) {
+      console.error('Send test results error:', error);
+      toast({
+        title: "Failed to send assessment",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
       isAuthenticated: !!user, 
       login, 
       register, 
-      logout 
+      logout,
+      sendTestResults
     }}>
       {children}
     </AuthContext.Provider>

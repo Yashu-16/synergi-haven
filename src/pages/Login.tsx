@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
@@ -30,8 +30,11 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, sendTestResults } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromAssessment = location.state?.fromAssessment;
+  const assessmentData = location.state?.assessmentData;
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -45,7 +48,14 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     const success = await login(data.email, data.password);
     if (success) {
-      navigate('/');
+      // If the user came from the assessment, navigate back to it
+      if (fromAssessment && assessmentData) {
+        // In a real implementation with Supabase, we would store the assessment data
+        // and redirect to the doctor selection page
+        navigate('/assessment');
+      } else {
+        navigate('/');
+      }
     }
   };
 
@@ -57,7 +67,9 @@ const Login = () => {
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800">Welcome Back</h1>
             <p className="text-gray-600 mt-2">
-              Sign in to continue your mental wellness journey
+              {fromAssessment 
+                ? 'Sign in to continue and send your assessment to a doctor'
+                : 'Sign in to continue your mental wellness journey'}
             </p>
           </div>
 

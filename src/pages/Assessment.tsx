@@ -207,7 +207,7 @@ const getRelevantDoctors = (results: any) => {
 
 const Assessment: React.FC = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, sendTestResults } = useAuth();
   const navigate = useNavigate();
   
   const [currentStep, setCurrentStep] = useState(0); // 0: intro, 1-10: questions, 11: results
@@ -251,11 +251,19 @@ const Assessment: React.FC = () => {
       if (user) {
         setDoctorSelectionOpen(true);
       } else {
-        setShowResults(true);
         toast({
           title: "Login Required",
-          description: "Please login to send your assessment to a doctor.",
+          description: "Please login to send your assessment to a doctor. Results will not be shown to protect privacy.",
           variant: "default",
+        });
+        navigate("/login", { 
+          state: { 
+            fromAssessment: true,
+            assessmentData: {
+              answers,
+              results: evalResults
+            }
+          }
         });
       }
     }
@@ -284,6 +292,7 @@ const Assessment: React.FC = () => {
         description: "Please login or register to send your assessment to a doctor",
         variant: "destructive",
       });
+      navigate("/login");
       return;
     }
     
@@ -294,26 +303,36 @@ const Assessment: React.FC = () => {
     setSelectedDoctor(doctorId);
   };
   
-  const handleConfirmSend = () => {
-    // In a real app, this would be an API call to send the report
-    const selectedDoctorName = doctorsData.find(d => d.id === selectedDoctor)?.name;
+  const handleConfirmSend = async () => {
+    if (!selectedDoctor || !results) return;
     
-    toast({
-      title: "Assessment Sent!",
-      description: `Your assessment has been sent to Dr. ${selectedDoctorName}. They will review it and get back to you soon.`,
+    // Use the new sendTestResults function
+    const success = await sendTestResults(selectedDoctor, {
+      answers,
+      results,
+      completedAt: new Date().toISOString()
     });
     
-    setDoctorSelectionOpen(false);
-    setReportSent(true);
-    
-    // Navigate to relevant doctors page
-    navigate("/doctors", { 
-      state: { 
-        fromAssessment: true, 
-        concerns: results?.primaryConcerns || [],
-        assessmentCompleted: true
-      }
-    });
+    if (success) {
+      const selectedDoctorName = doctorsData.find(d => d.id === selectedDoctor)?.name;
+      
+      toast({
+        title: "Assessment Sent!",
+        description: `Your assessment has been sent to Dr. ${selectedDoctorName}. They will review it and get back to you soon.`,
+      });
+      
+      setDoctorSelectionOpen(false);
+      setReportSent(true);
+      
+      // Navigate to relevant doctors page
+      navigate("/doctors", { 
+        state: { 
+          fromAssessment: true, 
+          concerns: results?.primaryConcerns || [],
+          assessmentCompleted: true
+        }
+      });
+    }
   };
   
   const handleViewDoctors = () => {
@@ -564,120 +583,6 @@ const Assessment: React.FC = () => {
                       <p className="text-gray-600 mb-8">
                         {reportSent 
                           ? `Your assessment has been sent to the doctor. They will review it and get back to you soon.`
-                          : `Your assessment is ready to be sent to a doctor who can help with your specific needs.`}
-                      </p>
-                    </div>
-                  )}
-                  
-                  <div className="border-t pt-8 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
-                    <Button 
-                      onClick={handleReset}
-                      variant="outline"
-                      className="border-synergi-300 text-synergi-700"
-                    >
-                      Take Assessment Again
-                    </Button>
-                    
-                    {!reportSent && (
-                      <Button 
-                        className="bg-synergi-400 hover:bg-synergi-500 text-white flex items-center"
-                        onClick={handleSendToDoctor}
-                      >
-                        <Send className="mr-2 h-4 w-4" />
-                        Send to Doctor
-                      </Button>
-                    )}
-                    
-                    <Button 
-                      className="bg-synergi-500 hover:bg-synergi-600 text-white"
-                      onClick={handleViewDoctors}
-                    >
-                      View Recommended Doctors
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <div className="mt-8 text-center text-gray-500 text-sm">
-                <p>
-                  This assessment is based on standardized screening tools for anxiety and depression.
-                  It is not a diagnostic tool and should not replace professional medical advice.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-      
-      <Dialog open={doctorSelectionOpen} onOpenChange={setDoctorSelectionOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Choose a Doctor</DialogTitle>
-            <DialogDescription>
-              Select a doctor to send your assessment report to. They will review your results and get in touch with you.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Doctors recommended based on your assessment:</h3>
-            </div>
-            
-            <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
-              {relevantDoctors.length > 0 ? (
-                relevantDoctors.map(doctor => (
-                  <div 
-                    key={doctor.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedDoctor === doctor.id 
-                        ? 'border-synergi-400 bg-synergi-50' 
-                        : 'border-gray-200 hover:border-synergi-200 hover:bg-gray-50'
-                    }`}
-                    onClick={() => handleSelectDoctor(doctor.id)}
-                  >
-                    <div className="flex items-center">
-                      <img src={doctor.image} alt={doctor.name} className="w-10 h-10 rounded-full object-cover mr-3" />
-                      <div>
-                        <h4 className="font-medium">{doctor.name}</h4>
-                        <p className="text-sm text-gray-500">{doctor.specialty}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  No doctors available based on your assessment.
-                </div>
-              )}
-            </div>
-            
-            <div className="mt-4 text-center text-sm text-gray-500">
-              <p>Each doctor will receive a copy of your assessment results and will contact you within 24 hours.</p>
-              <p className="text-synergi-600 mt-1 font-medium">First consultation is always free.</p>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setDoctorSelectionOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleConfirmSend} 
-              disabled={!selectedDoctor}
-              className="bg-synergi-500 hover:bg-synergi-600 text-white"
-            >
-              Send Report
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Footer />
-    </div>
-  );
-};
+                          : `Your assessment is ready to be sent to a doctor who can help with your specific needs. 
+                           
 
-export default Assessment;
