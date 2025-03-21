@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -49,7 +48,6 @@ const generateUnavailableDates = (doctorId: string) => {
 
 // Get time slots for a specific day
 const getTimeSlots = (doctorId: string, date: Date) => {
-  // In a real app, this would come from a backend API
   const day = date.getDay();
   
   // Simulate different availability based on day of week
@@ -147,7 +145,6 @@ const DoctorProfile: React.FC = () => {
   };
   
   const handleConfirmBooking = () => {
-    // In a real app, this would be an API call to book the appointment
     toast({
       title: "Appointment Booked!",
       description: `Your ${consultType} appointment with ${doctor?.name} on ${format(date!, 'PPP')} at ${selectedTime} has been confirmed. The doctor has been notified.`,
@@ -182,7 +179,6 @@ const DoctorProfile: React.FC = () => {
     );
   };
 
-  // Modify the booking section to show only one calendar
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -196,7 +192,6 @@ const DoctorProfile: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Doctor Info */}
             <div className="lg:col-span-2">
               <Card className="mb-8">
                 <CardContent className="p-0">
@@ -311,7 +306,6 @@ const DoctorProfile: React.FC = () => {
               </Card>
             </div>
             
-            {/* Right Column - Booking */}
             <div id="booking-section">
               <Card className="sticky top-24">
                 <CardContent className="p-6">
@@ -334,53 +328,50 @@ const DoctorProfile: React.FC = () => {
                     </TabsList>
                     
                     <TabsContent value="online" className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <h3 className="font-medium mb-2">Select Date</h3>
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={handleDateSelect}
-                            availableDates={availableDates}
-                            disabled={(currentDate) => {
-                              // Can't select dates in the past or unavailable dates
-                              const today = new Date();
-                              today.setHours(0, 0, 0, 0);
-                              return (
-                                currentDate < today || 
-                                currentDate > addWeeks(today, 4) || 
-                                isDayUnavailable(currentDate)
-                              );
-                            }}
-                            className="p-3 pointer-events-auto border border-gray-200 rounded-lg"
-                          />
-                          <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
-                            <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
-                            <span>Available dates</span>
-                          </div>
+                      <div>
+                        <h3 className="font-medium mb-2">Select Date</h3>
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={handleDateSelect}
+                          availableDates={availableDates}
+                          disabled={(currentDate) => {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            return (
+                              currentDate < today || 
+                              currentDate > addWeeks(today, 4) || 
+                              isDayUnavailable(currentDate)
+                            );
+                          }}
+                          className="border border-gray-200 rounded-lg"
+                        />
+                        <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
+                          <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
+                          <span>Available dates</span>
+                        </div>
 
-                          <div className="mt-4">
-                            <h3 className="font-medium mb-2">Available Time Slots</h3>
-                            {timeSlots.length > 0 ? (
-                              <div className="grid grid-cols-3 gap-2">
-                                {timeSlots.map((slot, idx) => (
-                                  <Button
-                                    key={idx}
-                                    variant={selectedTime === slot.time ? "default" : "outline"}
-                                    className={`${!slot.isAvailable ? "opacity-50 cursor-not-allowed" : "hover:bg-synergi-50 hover:text-synergi-700"}`}
-                                    onClick={() => slot.isAvailable && setSelectedTime(slot.time)}
-                                    disabled={!slot.isAvailable}
-                                  >
-                                    {slot.time}
-                                  </Button>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-center py-6 bg-gray-50 rounded-lg">
-                                <p className="text-gray-500">No available slots for the selected date</p>
-                              </div>
-                            )}
-                          </div>
+                        <div className="mt-4">
+                          <h3 className="font-medium mb-2">Available Time Slots</h3>
+                          {timeSlots.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-2">
+                              {timeSlots.map((slot, idx) => (
+                                <Button
+                                  key={idx}
+                                  variant={selectedTime === slot.time ? "default" : "outline"}
+                                  className={`${!slot.isAvailable ? "opacity-50 cursor-not-allowed" : "hover:bg-synergi-50 hover:text-synergi-700"}`}
+                                  onClick={() => slot.isAvailable && setSelectedTime(slot.time)}
+                                  disabled={!slot.isAvailable}
+                                >
+                                  {slot.time}
+                                </Button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-6 bg-gray-50 rounded-lg">
+                              <p className="text-gray-500">No available slots for the selected date</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -426,54 +417,50 @@ const DoctorProfile: React.FC = () => {
                             </p>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-4">
-                            <div>
-                              <h3 className="font-medium mb-2">Select Date</h3>
-                              {/* Using the same calendar component for both tabs */}
-                              <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={handleDateSelect}
-                                availableDates={availableDates}
-                                disabled={(currentDate) => {
-                                  // Can't select dates in the past or unavailable dates
-                                  const today = new Date();
-                                  today.setHours(0, 0, 0, 0);
-                                  return (
-                                    currentDate < today || 
-                                    currentDate > addWeeks(today, 4) || 
-                                    isDayUnavailable(currentDate)
-                                  );
-                                }}
-                                className="p-3 pointer-events-auto border border-gray-200 rounded-lg"
-                              />
-                              <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
-                                <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
-                                <span>Available dates</span>
-                              </div>
+                          <div>
+                            <h3 className="font-medium mb-2">Select Date</h3>
+                            <Calendar
+                              mode="single"
+                              selected={date}
+                              onSelect={handleDateSelect}
+                              availableDates={availableDates}
+                              disabled={(currentDate) => {
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                return (
+                                  currentDate < today || 
+                                  currentDate > addWeeks(today, 4) || 
+                                  isDayUnavailable(currentDate)
+                                );
+                              }}
+                              className="border border-gray-200 rounded-lg"
+                            />
+                            <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
+                              <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
+                              <span>Available dates</span>
+                            </div>
 
-                              <div className="mt-4">
-                                <h3 className="font-medium mb-2">Available Time Slots</h3>
-                                {timeSlots.length > 0 ? (
-                                  <div className="grid grid-cols-3 gap-2">
-                                    {timeSlots.map((slot, idx) => (
-                                      <Button
-                                        key={idx}
-                                        variant={selectedTime === slot.time ? "default" : "outline"}
-                                        className={`${!slot.isAvailable ? "opacity-50 cursor-not-allowed" : "hover:bg-synergi-50 hover:text-synergi-700"}`}
-                                        onClick={() => slot.isAvailable && setSelectedTime(slot.time)}
-                                        disabled={!slot.isAvailable}
-                                      >
-                                        {slot.time}
-                                      </Button>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="text-center py-6 bg-gray-50 rounded-lg">
-                                    <p className="text-gray-500">No available slots for the selected date</p>
-                                  </div>
-                                )}
-                              </div>
+                            <div className="mt-4">
+                              <h3 className="font-medium mb-2">Available Time Slots</h3>
+                              {timeSlots.length > 0 ? (
+                                <div className="grid grid-cols-3 gap-2">
+                                  {timeSlots.map((slot, idx) => (
+                                    <Button
+                                      key={idx}
+                                      variant={selectedTime === slot.time ? "default" : "outline"}
+                                      className={`${!slot.isAvailable ? "opacity-50 cursor-not-allowed" : "hover:bg-synergi-50 hover:text-synergi-700"}`}
+                                      onClick={() => slot.isAvailable && setSelectedTime(slot.time)}
+                                      disabled={!slot.isAvailable}
+                                    >
+                                      {slot.time}
+                                    </Button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-6 bg-gray-50 rounded-lg">
+                                  <p className="text-gray-500">No available slots for the selected date</p>
+                                </div>
+                              )}
                             </div>
                           </div>
                           
@@ -513,7 +500,6 @@ const DoctorProfile: React.FC = () => {
         </div>
       </main>
       
-      {/* Confirmation Dialog */}
       <Dialog open={confirmationOpen} onOpenChange={setConfirmationOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
