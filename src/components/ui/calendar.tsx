@@ -73,7 +73,7 @@ function Calendar({
           return (
             <div className="relative">
               <button {...dayProps}>
-                {dayProps.day}
+                {date.getDate()}
               </button>
               {isAvailable && (
                 <div className="absolute inset-0 border-2 border-green-500 rounded-full pointer-events-none"></div>
