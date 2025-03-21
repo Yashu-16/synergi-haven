@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -582,7 +583,108 @@ const Assessment: React.FC = () => {
                       <h2 className="text-2xl font-bold mb-2">Assessment Completed!</h2>
                       <p className="text-gray-600 mb-8">
                         {reportSent 
-                          ? `Your assessment has been sent to the doctor. They will review it and get back to you soon.`
-                          : `Your assessment is ready to be sent to a doctor who can help with your specific needs. 
-                           
+                          ? "Your assessment has been sent to the doctor. They will review it and get back to you soon."
+                          : "Your assessment is ready to be sent to a doctor who can help with your specific needs."}
+                      </p>
+                      
+                      {!reportSent && (
+                        <div className="space-y-4">
+                          <Button 
+                            onClick={handleSendToDoctor} 
+                            className="bg-synergi-400 hover:bg-synergi-500 text-white px-8 py-2"
+                          >
+                            <Send className="mr-2 h-4 w-4" />
+                            Send to a Doctor
+                          </Button>
+                          <div>
+                            <Button 
+                              variant="outline" 
+                              onClick={handleViewDoctors}
+                              className="mt-2"
+                            >
+                              View Recommended Doctors
+                            </Button>
+                          </div>
+                          <div>
+                            <Button 
+                              variant="link" 
+                              onClick={handleReset}
+                              className="text-gray-500"
+                            >
+                              Reset Assessment
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </main>
+      
+      <Footer />
+      
+      {/* Doctor Selection Dialog */}
+      <Dialog open={doctorSelectionOpen} onOpenChange={setDoctorSelectionOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select a Doctor</DialogTitle>
+            <DialogDescription>
+              Choose a doctor to send your assessment results to:
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4 max-h-[300px] overflow-y-auto">
+            {relevantDoctors.length > 0 ? (
+              relevantDoctors.map((doctor) => (
+                <div 
+                  key={doctor.id} 
+                  className={`flex items-start space-x-4 p-3 rounded-lg cursor-pointer border ${
+                    selectedDoctor === doctor.id ? 'border-synergi-400 bg-synergi-50' : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                  onClick={() => handleSelectDoctor(doctor.id)}
+                >
+                  <img 
+                    src={doctor.image} 
+                    alt={doctor.name} 
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                  <div>
+                    <h4 className="font-medium">{doctor.name}</h4>
+                    <p className="text-sm text-gray-500">
+                      {doctor.specializations.slice(0, 2).join(", ")}
+                      {doctor.specializations.length > 2 ? "..." : ""}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-4">No doctors found matching your needs</p>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setDoctorSelectionOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmSend}
+              disabled={!selectedDoctor}
+              className="bg-synergi-400 hover:bg-synergi-500 text-white"
+            >
+              Send Assessment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
+export default Assessment;
