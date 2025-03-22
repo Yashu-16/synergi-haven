@@ -106,8 +106,10 @@ const DoctorProfile: React.FC = () => {
   }, [date, doctor]);
 
   const handleDateSelect = (newDate: Date | undefined) => {
-    setDate(newDate);
-    setCalendarOpen(false);
+    if (newDate) {
+      setDate(newDate);
+      setCalendarOpen(false);
+    }
   };
 
   const handleBookAppointment = () => {
@@ -583,3 +585,4 @@ const DoctorProfile: React.FC = () => {
 };
 
 export default DoctorProfile;
+
