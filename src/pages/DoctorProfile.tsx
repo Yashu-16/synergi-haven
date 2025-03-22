@@ -30,14 +30,12 @@ import {
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
-// Generate unavailable dates (in a real app, this would come from an API)
 const generateUnavailableDates = (doctorId: string) => {
   const today = new Date();
   const unavailableDates = [];
   
-  // Make some random dates unavailable
   for (let i = 1; i <= 30; i++) {
-    if (Math.random() > 0.7) { // 30% chance of a date being unavailable
+    if (Math.random() > 0.7) {
       const date = addDays(today, i);
       unavailableDates.push(date);
     }
@@ -46,22 +44,19 @@ const generateUnavailableDates = (doctorId: string) => {
   return unavailableDates;
 };
 
-// Get time slots for a specific day
 const getTimeSlots = (doctorId: string, date: Date) => {
   const day = date.getDay();
   
-  // Simulate different availability based on day of week
-  if (day === 0) return []; // No slots on Sunday
+  if (day === 0) return [];
   
   const baseSlots = [
     "09:00 AM", "10:00 AM", "11:00 AM", 
     "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"
   ];
   
-  // Randomly mark some slots as booked
   return baseSlots.map(slot => ({
     time: slot,
-    isAvailable: Math.random() > 0.3 // 70% chance of being available
+    isAvailable: Math.random() > 0.3
   }));
 };
 
@@ -78,6 +73,7 @@ const DoctorProfile: React.FC = () => {
   const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [consultType, setConsultType] = useState<"online" | "in-person">("online");
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [appointmentDetails, setAppointmentDetails] = useState<{
     date: Date | null;
     time: string | null;
@@ -88,14 +84,12 @@ const DoctorProfile: React.FC = () => {
     type: "online",
   });
   
-  // Update unavailable and available dates when doctor changes
   useEffect(() => {
     if (doctor) {
       const today = new Date();
       const unavailableDays = generateUnavailableDates(doctor.id);
       setUnavailableDates(unavailableDays);
       
-      // Generate available dates (all dates in the next 30 days except unavailable ones)
       const allDates = Array.from({ length: 30 }, (_, i) => addDays(today, i + 1));
       const availableDays = allDates.filter(date => 
         !unavailableDays.some(unavailDate => isSameDay(date, unavailDate))
@@ -104,7 +98,6 @@ const DoctorProfile: React.FC = () => {
     }
   }, [doctor]);
   
-  // Update time slots when date changes
   useEffect(() => {
     if (date && doctor) {
       setTimeSlots(getTimeSlots(doctor.id, date));
@@ -114,6 +107,7 @@ const DoctorProfile: React.FC = () => {
 
   const handleDateSelect = (newDate: Date | undefined) => {
     setDate(newDate);
+    setCalendarOpen(false);
   };
 
   const handleBookAppointment = () => {
@@ -135,7 +129,6 @@ const DoctorProfile: React.FC = () => {
       return;
     }
 
-    // Open confirmation dialog instead of immediate booking
     setAppointmentDetails({
       date: date || null,
       time: selectedTime,
@@ -150,7 +143,6 @@ const DoctorProfile: React.FC = () => {
       description: `Your ${consultType} appointment with ${doctor?.name} on ${format(date!, 'PPP')} at ${selectedTime} has been confirmed. The doctor has been notified.`,
     });
     
-    // Close dialog and reset selection
     setConfirmationOpen(false);
     setSelectedTime(null);
   };
@@ -330,26 +322,36 @@ const DoctorProfile: React.FC = () => {
                     <TabsContent value="online" className="space-y-4">
                       <div>
                         <h3 className="font-medium mb-2">Select Date</h3>
-                        <Calendar
-                          mode="single"
-                          selected={date}
-                          onSelect={handleDateSelect}
-                          availableDates={availableDates}
-                          disabled={(currentDate) => {
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            return (
-                              currentDate < today || 
-                              currentDate > addWeeks(today, 4) || 
-                              isDayUnavailable(currentDate)
-                            );
-                          }}
-                          className="border border-gray-200 rounded-lg"
-                        />
-                        <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
-                          <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
-                          <span>Available dates</span>
-                        </div>
+                        
+                        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal border border-gray-200 p-6 bg-white"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {date ? format(date, "MMMM do, yyyy") : <span>Pick a date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={date}
+                              onSelect={handleDateSelect}
+                              availableDates={availableDates}
+                              disabled={(currentDate) => {
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                return (
+                                  currentDate < today || 
+                                  currentDate > addWeeks(today, 4) || 
+                                  isDayUnavailable(currentDate)
+                                );
+                              }}
+                              className="border rounded-md"
+                            />
+                          </PopoverContent>
+                        </Popover>
 
                         <div className="mt-4">
                           <h3 className="font-medium mb-2">Available Time Slots</h3>
@@ -419,26 +421,36 @@ const DoctorProfile: React.FC = () => {
                           
                           <div>
                             <h3 className="font-medium mb-2">Select Date</h3>
-                            <Calendar
-                              mode="single"
-                              selected={date}
-                              onSelect={handleDateSelect}
-                              availableDates={availableDates}
-                              disabled={(currentDate) => {
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                return (
-                                  currentDate < today || 
-                                  currentDate > addWeeks(today, 4) || 
-                                  isDayUnavailable(currentDate)
-                                );
-                              }}
-                              className="border border-gray-200 rounded-lg"
-                            />
-                            <div className="flex items-center justify-center text-sm mt-2 text-gray-500">
-                              <span className="inline-block w-3 h-3 border-2 border-green-500 rounded-full mr-1"></span>
-                              <span>Available dates</span>
-                            </div>
+                            
+                            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal border border-gray-200 p-6 bg-white"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {date ? format(date, "MMMM do, yyyy") : <span>Pick a date</span>}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={date}
+                                  onSelect={handleDateSelect}
+                                  availableDates={availableDates}
+                                  disabled={(currentDate) => {
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    return (
+                                      currentDate < today || 
+                                      currentDate > addWeeks(today, 4) || 
+                                      isDayUnavailable(currentDate)
+                                    );
+                                  }}
+                                  className="border rounded-md"
+                                />
+                              </PopoverContent>
+                            </Popover>
 
                             <div className="mt-4">
                               <h3 className="font-medium mb-2">Available Time Slots</h3>
