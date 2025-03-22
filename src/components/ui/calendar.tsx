@@ -73,7 +73,7 @@ function Calendar({
             <div className="relative">
               <button 
                 {...dayProps} 
-                className={cn(dayProps.className, "cursor-pointer")}
+                className="cursor-pointer"
               >
                 {date.getDate()}
               </button>
