@@ -335,7 +335,7 @@ const DoctorProfile: React.FC = () => {
                               {date ? format(date, "MMMM do, yyyy") : <span>Pick a date</span>}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
+                          <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                             <Calendar
                               mode="single"
                               selected={date}
@@ -434,7 +434,7 @@ const DoctorProfile: React.FC = () => {
                                   {date ? format(date, "MMMM do, yyyy") : <span>Pick a date</span>}
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
+                              <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                                 <Calendar
                                   mode="single"
                                   selected={date}
@@ -585,4 +585,3 @@ const DoctorProfile: React.FC = () => {
 };
 
 export default DoctorProfile;
-
