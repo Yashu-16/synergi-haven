@@ -112,6 +112,10 @@ const DoctorProfile: React.FC = () => {
     }
   };
 
+  const handleTimeSlotSelect = (time: string) => {
+    setSelectedTime(time);
+  };
+
   const handleBookAppointment = () => {
     if (!user) {
       toast({
@@ -363,8 +367,14 @@ const DoctorProfile: React.FC = () => {
                                 <Button
                                   key={idx}
                                   variant={selectedTime === slot.time ? "default" : "outline"}
-                                  className={`${!slot.isAvailable ? "opacity-50 cursor-not-allowed" : "hover:bg-synergi-50 hover:text-synergi-700"}`}
-                                  onClick={() => slot.isAvailable && setSelectedTime(slot.time)}
+                                  className={`${
+                                    !slot.isAvailable 
+                                      ? "opacity-50 cursor-not-allowed" 
+                                      : selectedTime === slot.time
+                                        ? "bg-synergi-500 text-white"
+                                        : "hover:bg-synergi-50 hover:text-synergi-700"
+                                  }`}
+                                  onClick={() => slot.isAvailable && handleTimeSlotSelect(slot.time)}
                                   disabled={!slot.isAvailable}
                                 >
                                   {slot.time}
@@ -398,7 +408,7 @@ const DoctorProfile: React.FC = () => {
                       )}
                       
                       <Button 
-                        className="w-full bg-synergi-500 hover:bg-synergi-600 text-white" 
+                        className="w-full bg-synergi-500 hover:bg-synergi-600 text-white shadow-lg shadow-synergi-200 transition-all" 
                         disabled={!selectedTime}
                         onClick={handleBookAppointment}
                       >
@@ -462,8 +472,14 @@ const DoctorProfile: React.FC = () => {
                                     <Button
                                       key={idx}
                                       variant={selectedTime === slot.time ? "default" : "outline"}
-                                      className={`${!slot.isAvailable ? "opacity-50 cursor-not-allowed" : "hover:bg-synergi-50 hover:text-synergi-700"}`}
-                                      onClick={() => slot.isAvailable && setSelectedTime(slot.time)}
+                                      className={`${
+                                        !slot.isAvailable 
+                                          ? "opacity-50 cursor-not-allowed" 
+                                          : selectedTime === slot.time
+                                            ? "bg-synergi-500 text-white"
+                                            : "hover:bg-synergi-50 hover:text-synergi-700"
+                                      }`}
+                                      onClick={() => slot.isAvailable && handleTimeSlotSelect(slot.time)}
                                       disabled={!slot.isAvailable}
                                     >
                                       {slot.time}
@@ -497,7 +513,7 @@ const DoctorProfile: React.FC = () => {
                           )}
                           
                           <Button 
-                            className="w-full bg-synergi-500 hover:bg-synergi-600 text-white" 
+                            className="w-full bg-synergi-500 hover:bg-synergi-600 text-white shadow-lg shadow-synergi-200 transition-all" 
                             disabled={!selectedTime}
                             onClick={handleBookAppointment}
                           >
