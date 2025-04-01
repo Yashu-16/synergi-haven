@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -30,6 +29,13 @@ interface Notification {
   relatedId?: string;
 }
 
+interface MessageThread {
+  userId: string;
+  userName: string;
+  unreadCount: number;
+  lastMessage: Message;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -42,7 +48,7 @@ interface AuthContextType {
   sendTestResults: (doctorId: string, assessmentData: any) => Promise<boolean>;
   sendMessage: (recipientId: string, content: string) => Promise<boolean>;
   getMessages: (otherUserId: string) => Message[];
-  getAllMessageThreads: () => Array<{ userId: string, userName: string, unreadCount: number, lastMessage: Message }>;
+  getAllMessageThreads: () => MessageThread[];
   getNotifications: () => Notification[];
   markNotificationAsRead: (notificationId: string) => void;
   markAllNotificationsAsRead: () => void;
@@ -63,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
   
-  // Check if user is logged in on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('synergiUser');
     if (storedUser) {
@@ -76,11 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Note: This is still using localStorage but is structured to be easily replaced with Supabase
-  // In a real implementation, we would replace these functions with Supabase auth calls
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // In a real app with Supabase, we would use supabase.auth.signInWithPassword()
       const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
       const user = users.find((u: any) => 
         u.email.toLowerCase() === email.toLowerCase() && u.password === password
@@ -121,7 +123,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role: 'patient' | 'doctor' | 'admin'
   ): Promise<boolean> => {
     try {
-      // In a real app with Supabase, we would use supabase.auth.signUp()
       const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
       
       if (users.some((u: any) => u.email.toLowerCase() === email.toLowerCase())) {
@@ -145,7 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       users.push(newUser);
       localStorage.setItem('synergiUsers', JSON.stringify(users));
       
-      // Log the user in
       const { password: _, ...userWithoutPassword } = newUser;
       setUser(userWithoutPassword);
       localStorage.setItem('synergiUser', JSON.stringify(userWithoutPassword));
@@ -167,7 +167,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // In a real app with Supabase, we would use supabase.auth.signOut()
     setUser(null);
     localStorage.removeItem('synergiUser');
     toast({
@@ -176,11 +175,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Send test results to a doctor
   const sendTestResults = async (doctorId: string, assessmentData: any): Promise<boolean> => {
     try {
-      // In a real app with Supabase, we would store this in a database table
-      // For now, we'll simulate it with localStorage
       if (!user) {
         toast({
           title: "Authentication required",
@@ -205,7 +201,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       testResults.push(newTestResult);
       localStorage.setItem('synergiTestResults', JSON.stringify(testResults));
       
-      // Create notification for doctor
       const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
       notifications.push({
         id: crypto.randomUUID(),
@@ -235,7 +230,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Send message to another user
   const sendMessage = async (recipientId: string, content: string): Promise<boolean> => {
     try {
       if (!user) {
@@ -262,7 +256,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       messages.push(newMessage);
       localStorage.setItem('synergiMessages', JSON.stringify(messages));
       
-      // Create notification for recipient
       const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
       const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
       const recipient = users.find((u: any) => u.id === recipientId);
@@ -297,7 +290,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Get messages between current user and another user
   const getMessages = (otherUserId: string): Message[] => {
     if (!user) return [];
     
@@ -315,24 +307,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Get all message threads for current user
-  const getAllMessageThreads = () => {
+  const getAllMessageThreads = (): MessageThread[] => {
     if (!user) return [];
     
     try {
-      const messages = JSON.parse(localStorage.getItem('synergiMessages') || '[]');
+      const messages = JSON.parse(localStorage.getItem('synergiMessages') || '[]') as Message[];
       const userMessages = messages.filter((message: Message) => 
         message.senderId === user.id || message.recipientId === user.id
       );
       
       const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
       
-      // Get unique user IDs that the current user has messaged with
       const uniqueUserIds = [...new Set(
         userMessages.map((message: Message) => 
           message.senderId === user.id ? message.recipientId : message.senderId
         )
-      )];
+      )] as string[];
       
       return uniqueUserIds.map(userId => {
         const contactUser = users.find((u: any) => u.id === userId);
@@ -347,9 +337,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           message.recipientId === user.id && !message.read
         ).length;
         
-        const lastMessage = threadMessages.sort((a: Message, b: Message) => 
+        const sortedMessages = [...threadMessages].sort((a: Message, b: Message) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        )[0];
+        );
+        
+        const lastMessage = sortedMessages.length > 0 ? sortedMessages[0] : {
+          id: '',
+          senderId: '',
+          senderName: '',
+          recipientId: '',
+          content: '',
+          timestamp: new Date().toISOString(),
+          read: true
+        };
         
         return {
           userId,
@@ -364,7 +364,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Get notifications for current user
   const getNotifications = (): Notification[] => {
     if (!user) return [];
     
@@ -381,7 +380,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Mark notification as read
   const markNotificationAsRead = (notificationId: string): void => {
     try {
       const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
@@ -394,7 +392,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Mark all notifications as read
   const markAllNotificationsAsRead = (): void => {
     try {
       if (!user) return;
@@ -409,7 +406,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Get unread notification count
   const getUnreadNotificationCount = (): number => {
     if (!user) return 0;
     
@@ -424,7 +420,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Role-based access control helpers
   const isSuperAdmin = user?.role === 'admin';
   const isDoctor = user?.role === 'doctor';
   const isPatient = user?.role === 'patient';
