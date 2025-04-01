@@ -14,6 +14,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import DoctorProfile from "./pages/DoctorProfile";
 import About from "./pages/About";
+import DoctorDashboard from "./pages/DoctorDashboard";
+import Messages from "./pages/Messages";
+import Notifications from "./pages/Notifications";
+import Appointments from "./pages/Appointments";
+import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +38,14 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/about" element={<About />} />
             <Route path="/doctor/:id" element={<DoctorProfile />} />
+            
+            {/* New routes */}
+            <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            
             <Route path="/blog" element={<NotFound />} />
             <Route path="/careers" element={<NotFound />} />
             <Route path="/conditions/*" element={<NotFound />} />

@@ -9,13 +9,44 @@ interface User {
   role: 'patient' | 'doctor' | 'admin';
 }
 
+interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  recipientId: string;
+  content: string;
+  timestamp: string;
+  read: boolean;
+}
+
+interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  type: 'appointment' | 'message' | 'system';
+  relatedId?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isSuperAdmin: boolean;
+  isDoctor: boolean;
+  isPatient: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string, role: 'patient' | 'doctor') => Promise<boolean>;
+  register: (name: string, email: string, password: string, role: 'patient' | 'doctor' | 'admin') => Promise<boolean>;
   logout: () => void;
   sendTestResults: (doctorId: string, assessmentData: any) => Promise<boolean>;
+  sendMessage: (recipientId: string, content: string) => Promise<boolean>;
+  getMessages: (otherUserId: string) => Message[];
+  getAllMessageThreads: () => Array<{ userId: string, userName: string, unreadCount: number, lastMessage: Message }>;
+  getNotifications: () => Notification[];
+  markNotificationAsRead: (notificationId: string) => void;
+  markAllNotificationsAsRead: () => void;
+  getUnreadNotificationCount: () => number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,8 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
   
+  // Check if user is logged in on mount
   useEffect(() => {
-    // Check if user is logged in on mount
     const storedUser = localStorage.getItem('synergiUser');
     if (storedUser) {
       try {
@@ -87,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: string, 
     email: string, 
     password: string, 
-    role: 'patient' | 'doctor'
+    role: 'patient' | 'doctor' | 'admin'
   ): Promise<boolean> => {
     try {
       // In a real app with Supabase, we would use supabase.auth.signUp()
@@ -145,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // New function to send test results to a doctor
+  // Send test results to a doctor
   const sendTestResults = async (doctorId: string, assessmentData: any): Promise<boolean> => {
     try {
       // In a real app with Supabase, we would store this in a database table
@@ -174,6 +205,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       testResults.push(newTestResult);
       localStorage.setItem('synergiTestResults', JSON.stringify(testResults));
       
+      // Create notification for doctor
+      const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
+      notifications.push({
+        id: crypto.randomUUID(),
+        userId: doctorId,
+        title: 'New Assessment Result',
+        message: `${user.name} has sent you their assessment results.`,
+        timestamp: new Date().toISOString(),
+        read: false,
+        type: 'system',
+        relatedId: newTestResult.id
+      });
+      localStorage.setItem('synergiNotifications', JSON.stringify(notifications));
+      
       toast({
         title: "Assessment sent",
         description: "Your assessment has been sent to the doctor successfully",
@@ -190,14 +235,218 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Send message to another user
+  const sendMessage = async (recipientId: string, content: string): Promise<boolean> => {
+    try {
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to send messages",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      const messages = JSON.parse(localStorage.getItem('synergiMessages') || '[]');
+      
+      const newMessage = {
+        id: crypto.randomUUID(),
+        senderId: user.id,
+        senderName: user.name,
+        recipientId: recipientId,
+        content: content,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      
+      messages.push(newMessage);
+      localStorage.setItem('synergiMessages', JSON.stringify(messages));
+      
+      // Create notification for recipient
+      const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
+      const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
+      const recipient = users.find((u: any) => u.id === recipientId);
+      
+      if (recipient) {
+        notifications.push({
+          id: crypto.randomUUID(),
+          userId: recipientId,
+          title: 'New Message',
+          message: `You have received a new message from ${user.name}`,
+          timestamp: new Date().toISOString(),
+          read: false,
+          type: 'message',
+          relatedId: newMessage.id
+        });
+        localStorage.setItem('synergiNotifications', JSON.stringify(notifications));
+      }
+      
+      toast({
+        title: "Message sent",
+        description: "Your message has been sent successfully",
+      });
+      return true;
+    } catch (error) {
+      console.error('Send message error:', error);
+      toast({
+        title: "Failed to send message",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Get messages between current user and another user
+  const getMessages = (otherUserId: string): Message[] => {
+    if (!user) return [];
+    
+    try {
+      const messages = JSON.parse(localStorage.getItem('synergiMessages') || '[]');
+      return messages.filter((message: Message) => 
+        (message.senderId === user.id && message.recipientId === otherUserId) ||
+        (message.senderId === otherUserId && message.recipientId === user.id)
+      ).sort((a: Message, b: Message) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+    } catch (error) {
+      console.error('Get messages error:', error);
+      return [];
+    }
+  };
+
+  // Get all message threads for current user
+  const getAllMessageThreads = () => {
+    if (!user) return [];
+    
+    try {
+      const messages = JSON.parse(localStorage.getItem('synergiMessages') || '[]');
+      const userMessages = messages.filter((message: Message) => 
+        message.senderId === user.id || message.recipientId === user.id
+      );
+      
+      const users = JSON.parse(localStorage.getItem('synergiUsers') || '[]');
+      
+      // Get unique user IDs that the current user has messaged with
+      const uniqueUserIds = [...new Set(
+        userMessages.map((message: Message) => 
+          message.senderId === user.id ? message.recipientId : message.senderId
+        )
+      )];
+      
+      return uniqueUserIds.map(userId => {
+        const contactUser = users.find((u: any) => u.id === userId);
+        const contactName = contactUser ? contactUser.name : 'Unknown User';
+        
+        const threadMessages = userMessages.filter((message: Message) => 
+          (message.senderId === user.id && message.recipientId === userId) ||
+          (message.senderId === userId && message.recipientId === user.id)
+        );
+        
+        const unreadCount = threadMessages.filter((message: Message) => 
+          message.recipientId === user.id && !message.read
+        ).length;
+        
+        const lastMessage = threadMessages.sort((a: Message, b: Message) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )[0];
+        
+        return {
+          userId,
+          userName: contactName,
+          unreadCount,
+          lastMessage
+        };
+      });
+    } catch (error) {
+      console.error('Get message threads error:', error);
+      return [];
+    }
+  };
+
+  // Get notifications for current user
+  const getNotifications = (): Notification[] => {
+    if (!user) return [];
+    
+    try {
+      const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
+      return notifications
+        .filter((notification: Notification) => notification.userId === user.id)
+        .sort((a: Notification, b: Notification) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+    } catch (error) {
+      console.error('Get notifications error:', error);
+      return [];
+    }
+  };
+
+  // Mark notification as read
+  const markNotificationAsRead = (notificationId: string): void => {
+    try {
+      const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
+      const updatedNotifications = notifications.map((notification: Notification) => 
+        notification.id === notificationId ? { ...notification, read: true } : notification
+      );
+      localStorage.setItem('synergiNotifications', JSON.stringify(updatedNotifications));
+    } catch (error) {
+      console.error('Mark notification as read error:', error);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllNotificationsAsRead = (): void => {
+    try {
+      if (!user) return;
+      
+      const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
+      const updatedNotifications = notifications.map((notification: Notification) => 
+        notification.userId === user.id ? { ...notification, read: true } : notification
+      );
+      localStorage.setItem('synergiNotifications', JSON.stringify(updatedNotifications));
+    } catch (error) {
+      console.error('Mark all notifications as read error:', error);
+    }
+  };
+
+  // Get unread notification count
+  const getUnreadNotificationCount = (): number => {
+    if (!user) return 0;
+    
+    try {
+      const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
+      return notifications.filter((notification: Notification) => 
+        notification.userId === user.id && !notification.read
+      ).length;
+    } catch (error) {
+      console.error('Get unread notification count error:', error);
+      return 0;
+    }
+  };
+
+  // Role-based access control helpers
+  const isSuperAdmin = user?.role === 'admin';
+  const isDoctor = user?.role === 'doctor';
+  const isPatient = user?.role === 'patient';
+
   return (
     <AuthContext.Provider value={{ 
       user, 
-      isAuthenticated: !!user, 
+      isAuthenticated: !!user,
+      isSuperAdmin,
+      isDoctor,
+      isPatient,
       login, 
       register, 
       logout,
-      sendTestResults
+      sendTestResults,
+      sendMessage,
+      getMessages,
+      getAllMessageThreads,
+      getNotifications,
+      markNotificationAsRead,
+      markAllNotificationsAsRead,
+      getUnreadNotificationCount
     }}>
       {children}
     </AuthContext.Provider>

@@ -4,11 +4,13 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppointmentConfirmationProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   doctor: {
+    id: string;
     name: string;
     specialty: string;
     image: string;
@@ -30,6 +32,49 @@ const AppointmentConfirmation: React.FC<AppointmentConfirmationProps> = ({
   appointmentDetails,
   onConfirm
 }) => {
+  const { user, sendMessage } = useAuth();
+
+  const handleConfirmBooking = () => {
+    // Save appointment to local storage
+    if (user && appointmentDetails.date && appointmentDetails.time) {
+      const appointments = JSON.parse(localStorage.getItem('synergiAppointments') || '[]');
+      
+      const newAppointment = {
+        id: crypto.randomUUID(),
+        doctorId: doctor.id,
+        doctorName: doctor.name,
+        patientId: user.id,
+        patientName: user.name,
+        date: appointmentDetails.date.toISOString(),
+        time: appointmentDetails.time,
+        type: appointmentDetails.type,
+        status: 'pending'
+      };
+      
+      appointments.push(newAppointment);
+      localStorage.setItem('synergiAppointments', JSON.stringify(appointments));
+      
+      // Create notification for doctor
+      const notifications = JSON.parse(localStorage.getItem('synergiNotifications') || '[]');
+      notifications.push({
+        id: crypto.randomUUID(),
+        userId: doctor.id,
+        title: 'New Appointment Request',
+        message: `${user.name} has requested an appointment for ${format(appointmentDetails.date, 'PPP')} at ${appointmentDetails.time}`,
+        timestamp: new Date().toISOString(),
+        read: false,
+        type: 'appointment',
+        relatedId: newAppointment.id
+      });
+      localStorage.setItem('synergiNotifications', JSON.stringify(notifications));
+      
+      // Send a message to the doctor
+      sendMessage(doctor.id, `I've booked an appointment for ${format(appointmentDetails.date, 'PPP')} at ${appointmentDetails.time}. Looking forward to our consultation.`);
+    }
+    
+    onConfirm();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -87,7 +132,7 @@ const AppointmentConfirmation: React.FC<AppointmentConfirmationProps> = ({
             Cancel
           </Button>
           <Button 
-            onClick={onConfirm}
+            onClick={handleConfirmBooking}
             className="bg-synergi-500 hover:bg-synergi-600 text-white"
           >
             Confirm Booking

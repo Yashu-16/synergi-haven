@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, MessageSquare, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationPanel from './notifications/NotificationPanel';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,7 @@ import {
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isSuperAdmin, isDoctor, logout } = useAuth();
   const navigate = useNavigate();
   
   // Check if page is scrolled
@@ -60,37 +61,71 @@ const Navbar: React.FC = () => {
             <Link to="/doctors" className="text-gray-700 hover:text-synergi-500 transition-colors duration-300">
               Doctors
             </Link>
-            <Link to="/assessment" className="text-gray-700 hover:text-synergi-500 transition-colors duration-300">
-              Assessment
-            </Link>
+            
+            {isAuthenticated && !isDoctor && (
+              <Link to="/assessment" className="text-gray-700 hover:text-synergi-500 transition-colors duration-300">
+                Assessment
+              </Link>
+            )}
+            
             <Link to="/about" className="text-gray-700 hover:text-synergi-500 transition-colors duration-300">
               About
             </Link>
             
             {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="border-synergi-300 text-synergi-700 hover:bg-synergi-50">
-                    <User className="mr-2 h-4 w-4" />
-                    {user?.name?.split(' ')[0]}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Link to="/profile" className="flex w-full">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link to="/appointments" className="flex w-full">Appointments</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-2">
+                {/* Messages Button */}
+                <Button 
+                  variant="ghost" 
+                  className="p-2" 
+                  onClick={() => navigate('/messages')}
+                >
+                  <MessageSquare className="h-5 w-5" />
+                </Button>
+                
+                {/* Notification Panel */}
+                <NotificationPanel />
+                
+                {/* User Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="border-synergi-300 text-synergi-700 hover:bg-synergi-50">
+                      <User className="mr-2 h-4 w-4" />
+                      {user?.name?.split(' ')[0]}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem>
+                      <Link to="/profile" className="flex w-full">Profile</Link>
+                    </DropdownMenuItem>
+                    
+                    {isDoctor ? (
+                      <DropdownMenuItem>
+                        <Link to="/doctor-dashboard" className="flex w-full">Doctor Dashboard</Link>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem>
+                        <Link to="/appointments" className="flex w-full">My Appointments</Link>
+                      </DropdownMenuItem>
+                    )}
+                    
+                    {isSuperAdmin && (
+                      <DropdownMenuItem>
+                        <Link to="/admin" className="flex w-full">Admin Panel</Link>
+                      </DropdownMenuItem>
+                    )}
+                    
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             ) : (
               <>
                 <Button asChild variant="outline" className="border-synergi-300 text-synergi-700 hover:bg-synergi-50">
@@ -132,13 +167,17 @@ const Navbar: React.FC = () => {
               >
                 Doctors
               </Link>
-              <Link 
-                to="/assessment" 
-                className="text-gray-700 hover:text-synergi-500 transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Assessment
-              </Link>
+              
+              {isAuthenticated && !isDoctor && (
+                <Link 
+                  to="/assessment" 
+                  className="text-gray-700 hover:text-synergi-500 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Assessment
+                </Link>
+              )}
+              
               <Link 
                 to="/about" 
                 className="text-gray-700 hover:text-synergi-500 transition-colors"
@@ -146,6 +185,53 @@ const Navbar: React.FC = () => {
               >
                 About
               </Link>
+              
+              {isAuthenticated && (
+                <>
+                  <Link
+                    to="/messages"
+                    className="text-gray-700 hover:text-synergi-500 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Messages
+                  </Link>
+                  <Link
+                    to="/notifications"
+                    className="text-gray-700 hover:text-synergi-500 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Notifications
+                  </Link>
+                  
+                  {isDoctor ? (
+                    <Link
+                      to="/doctor-dashboard"
+                      className="text-gray-700 hover:text-synergi-500 transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Doctor Dashboard
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/appointments"
+                      className="text-gray-700 hover:text-synergi-500 transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      My Appointments
+                    </Link>
+                  )}
+                  
+                  {isSuperAdmin && (
+                    <Link
+                      to="/admin"
+                      className="text-gray-700 hover:text-synergi-500 transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
+                </>
+              )}
               
               <div className="flex space-x-4 pt-2">
                 {isAuthenticated ? (
