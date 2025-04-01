@@ -30,7 +30,7 @@ interface DoctorInfoProps {
     specializations: string[];
     education?: string[];
     languages?: string[];
-    consultationFee: number;
+    consultationFee?: number; // Changed from required to optional
     firstConsultFree?: boolean;
   };
 }
@@ -135,9 +135,15 @@ const DoctorInfo: React.FC<DoctorInfoProps> = ({ doctor }) => {
             <h2 className="text-xl font-semibold mb-3">Consultation Fee</h2>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-700">
-                  ₹{doctor.consultationFee} per session
-                </p>
+                {doctor.consultationFee ? (
+                  <p className="text-gray-700">
+                    ₹{doctor.consultationFee} per session
+                  </p>
+                ) : (
+                  <p className="text-gray-700">
+                    Free consultation
+                  </p>
+                )}
                 {doctor.firstConsultFree && (
                   <p className="text-green-600 text-sm font-medium flex items-center mt-1">
                     <Check className="w-4 h-4 mr-1" />
