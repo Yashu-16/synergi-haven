@@ -51,7 +51,7 @@ function Calendar({
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 cursor-pointer"
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
         ),
         day_range_end: "day-range-end",
         day_selected:
@@ -68,28 +68,6 @@ function Calendar({
       components={{
         IconLeft: () => <ChevronLeft className="h-4 w-4" />,
         IconRight: () => <ChevronRight className="h-4 w-4" />,
-        Day: ({ date, ...dayProps }) => {
-          const isAvailable = availableDates.length > 0 ? isDateAvailable(date) : true;
-          const isPast = isPastDate(date);
-          
-          return (
-            <div className="relative">
-              <button 
-                {...dayProps} 
-                className={cn(
-                  "w-full h-full rounded-full transition-all",
-                  isPast && "opacity-30 cursor-not-allowed bg-gray-100",
-                  isAvailable && availableDates.length > 0 && !isPast && "hover:bg-green-50"
-                )}
-              >
-                {date.getDate()}
-              </button>
-              {isAvailable && availableDates.length > 0 && !isPast && (
-                <div className="absolute inset-0 border-2 border-green-500 rounded-full pointer-events-none opacity-70"></div>
-              )}
-            </div>
-          );
-        },
       }}
       {...props}
     />

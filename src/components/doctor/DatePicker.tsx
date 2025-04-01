@@ -38,12 +38,12 @@ const DatePicker: React.FC<DatePickerProps> = ({
             {date ? format(date, "MMMM do, yyyy") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+        <PopoverContent className="w-auto p-0 bg-white z-50" align="start">
           <Calendar
             mode="single"
             selected={date}
             onSelect={onSelectDate}
-            availableDates={availableDates}
+            initialFocus={true}
             disabled={(currentDate) => {
               return isPastDate(currentDate) || !isDateInRange(currentDate) || isDayUnavailable(currentDate);
             }}
