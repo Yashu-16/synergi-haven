@@ -5,6 +5,7 @@ import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { isPastDate } from "@/utils/appointmentUtils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   availableDates?: Date[];
@@ -58,7 +59,7 @@ function Calendar({
         day_today: "bg-accent text-accent-foreground",
         day_outside:
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground opacity-50",
+        day_disabled: "text-muted-foreground opacity-30",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
@@ -69,16 +70,22 @@ function Calendar({
         IconRight: () => <ChevronRight className="h-4 w-4" />,
         Day: ({ date, ...dayProps }) => {
           const isAvailable = availableDates.length > 0 ? isDateAvailable(date) : true;
+          const isPast = isPastDate(date);
+          
           return (
             <div className="relative">
               <button 
                 {...dayProps} 
-                className="w-full h-full cursor-pointer"
+                className={cn(
+                  "w-full h-full rounded-full transition-all",
+                  isPast && "opacity-30 cursor-not-allowed bg-gray-100",
+                  isAvailable && availableDates.length > 0 && !isPast && "hover:bg-green-50"
+                )}
               >
                 {date.getDate()}
               </button>
-              {isAvailable && availableDates.length > 0 && (
-                <div className="absolute inset-0 border-2 border-green-500 rounded-full pointer-events-none"></div>
+              {isAvailable && availableDates.length > 0 && !isPast && (
+                <div className="absolute inset-0 border-2 border-green-500 rounded-full pointer-events-none opacity-70"></div>
               )}
             </div>
           );

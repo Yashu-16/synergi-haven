@@ -1,5 +1,5 @@
 
-import { addDays } from "date-fns";
+import { addDays, isBefore, startOfDay, addWeeks } from "date-fns";
 
 export const generateUnavailableDates = (doctorId: string) => {
   const today = new Date();
@@ -29,4 +29,16 @@ export const getTimeSlots = (doctorId: string, date: Date) => {
     time: slot,
     isAvailable: Math.random() > 0.3
   }));
+};
+
+export const isPastDate = (date: Date) => {
+  const today = startOfDay(new Date());
+  return isBefore(date, today);
+};
+
+export const isDateInRange = (date: Date) => {
+  const today = startOfDay(new Date());
+  const fourWeeksLater = addWeeks(today, 4);
+  
+  return !isBefore(date, today) && !isBefore(fourWeeksLater, date);
 };

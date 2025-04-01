@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
+import { isPastDate, isDateInRange } from "@/utils/appointmentUtils";
 
 interface DatePickerProps {
   date: Date | undefined;
@@ -31,7 +32,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-start text-left font-normal border border-gray-200 p-6 bg-white"
+            className="w-full justify-start text-left font-normal border border-gray-200 p-6 bg-white hover:bg-gray-50"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date ? format(date, "MMMM do, yyyy") : <span>Pick a date</span>}
@@ -44,16 +45,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
             onSelect={onSelectDate}
             availableDates={availableDates}
             disabled={(currentDate) => {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const fourWeeksFromNow = new Date(today);
-              fourWeeksFromNow.setDate(today.getDate() + 28);
-              
-              return (
-                currentDate < today || 
-                currentDate > fourWeeksFromNow || 
-                isDayUnavailable(currentDate)
-              );
+              return isPastDate(currentDate) || !isDateInRange(currentDate) || isDayUnavailable(currentDate);
             }}
             className="border rounded-md"
           />

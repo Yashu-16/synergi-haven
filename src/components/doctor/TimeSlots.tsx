@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface TimeSlotsProps {
   timeSlots: { time: string; isAvailable: boolean }[];
@@ -22,18 +23,19 @@ const TimeSlots: React.FC<TimeSlotsProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-3">
       {timeSlots.map((slot, idx) => (
         <Button
           key={idx}
           variant={selectedTime === slot.time ? "default" : "outline"}
-          className={`${
+          className={cn(
+            "transition-all",
             !slot.isAvailable 
-              ? "opacity-50 cursor-not-allowed" 
+              ? "opacity-40 cursor-not-allowed bg-gray-100" 
               : selectedTime === slot.time
-                ? "bg-synergi-500 text-white"
-                : "hover:bg-synergi-50 hover:text-synergi-700"
-          }`}
+                ? "bg-synergi-500 text-white shadow-md shadow-synergi-200"
+                : "hover:bg-synergi-50 hover:text-synergi-700 hover:border-synergi-300"
+          )}
           onClick={() => slot.isAvailable && onSelectTime(slot.time)}
           disabled={!slot.isAvailable}
         >
