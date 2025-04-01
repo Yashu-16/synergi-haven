@@ -26,7 +26,7 @@ interface DoctorInfoProps {
     experience: number;
     availability: string;
     nextAvailable: string;
-    bio: string;
+    bio?: string; // Changed from required to optional
     specializations: string[];
     education?: string[];
     languages?: string[];
@@ -87,10 +87,12 @@ const DoctorInfo: React.FC<DoctorInfoProps> = ({ doctor }) => {
             </div>
           </div>
           
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">About</h2>
-            <p className="text-gray-700 leading-relaxed">{doctor.bio}</p>
-          </div>
+          {doctor.bio && (
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-3">About</h2>
+              <p className="text-gray-700 leading-relaxed">{doctor.bio}</p>
+            </div>
+          )}
           
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-3">Specializations</h2>
@@ -105,25 +107,29 @@ const DoctorInfo: React.FC<DoctorInfoProps> = ({ doctor }) => {
           
           <Separator className="my-6" />
           
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">Education & Training</h2>
-            <ul className="space-y-3">
-              {doctor.education?.map((edu, idx) => (
-                <li key={idx} className="flex items-start">
-                  <GraduationCap className="text-synergi-500 mr-2 mt-0.5" />
-                  <span className="text-gray-700">{edu}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-3">Languages</h2>
-            <div className="flex items-center">
-              <Languages className="text-synergi-500 mr-2" />
-              <span className="text-gray-700">{doctor.languages?.join(", ")}</span>
+          {doctor.education && doctor.education.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-3">Education & Training</h2>
+              <ul className="space-y-3">
+                {doctor.education?.map((edu, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <GraduationCap className="text-synergi-500 mr-2 mt-0.5" />
+                    <span className="text-gray-700">{edu}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          )}
+          
+          {doctor.languages && doctor.languages.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-3">Languages</h2>
+              <div className="flex items-center">
+                <Languages className="text-synergi-500 mr-2" />
+                <span className="text-gray-700">{doctor.languages?.join(", ")}</span>
+              </div>
+            </div>
+          )}
           
           <div>
             <h2 className="text-xl font-semibold mb-3">Consultation Fee</h2>
